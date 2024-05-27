@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
             res.status(200).json({ Records: filteredResults });
         } else {
-            res.status(200).json({ Records: products });
+            res.status(200).json(products);
         }
     } catch (error) {
         console.error('Error fetching product list:', error);

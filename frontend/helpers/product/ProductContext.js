@@ -23,49 +23,51 @@ const ProductsProvider = ({ children }) => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-
+    
                 // Filter out empty query parameters
                 const filteredQuery = Object.fromEntries(
                     Object.entries(query).filter(([key, value]) => value !== 'brand=&color=&size=&minPrice=500&maxPrice=10000')
                 );
-
+    
                 // Create the search query string from filtered query parameters
                 const searchQuery = queryString.stringify(filteredQuery);
-
+    
                 // Check if the search query is empty or only contains default values
                 const isSearchQueryEmpty = searchQuery === '' || (searchQuery === 'brand=&color=&size=&minPrice=500&maxPrice=10000');
-
+    
                 if (!isSearchQueryEmpty) {
                     // Fetch data with the search query if it exists
                     const response = await axios.get(`/api/getProductList?${searchQuery}`);
-
-
+    
                     // Handle the API response
                     if (response.data.Records && Array.isArray(response.data.Records) && response.data.Records.length > 0) {
                         setProducts(response.data.Records);
+                        // console.log("Response with search query:", response.data.Records);
                     } else {
                         setProducts([]);
+                        // console.log("No records found, navigating to left sidebar...");
                     }
-                } else {
-                    // Fetch all products if no search query or only default values are present
+                } else if (Object.keys(filteredQuery).length === 0) {
+                    // Fetch all products only if the query object is empty (no search query)
                     const response = await axios.get('/api/getProductList');
+                    console.log("response from the productcontext",response)
                     if (response.data.Records) {
                         setProducts(Array.isArray(response.data.Records) ? response.data.Records : [response.data.Records]);
                     } else {
                         setProducts([]);
                     }
                 }
-
+    
                 setLoading(false);
             } catch (error) {
                 setLoading(false);
                 setError(error);
             }
         };
-
+    
         fetchData();
     }, [query]); // Run effect only when query changes
-
+    
     const fetchCategoriesProducts = async (categoryId) => {
         try {
             const response = await axios.get(`/api/getProductByCategory?categoryId=${categoryId}`);
