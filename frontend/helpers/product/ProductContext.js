@@ -42,10 +42,10 @@ const ProductsProvider = ({ children }) => {
                     // Handle the API response
                     if (response.data.Records && Array.isArray(response.data.Records) && response.data.Records.length > 0) {
                         setProducts(response.data.Records);
-                        // console.log("Response with search query:", response.data.Records);
+
                     } else {
                         setProducts([]);
-                        // console.log("No records found, navigating to left sidebar...");
+                        
                     }
                 } else if (Object.keys(filteredQuery).length === 0) {
                     // Fetch all products only if the query object is empty (no search query)
