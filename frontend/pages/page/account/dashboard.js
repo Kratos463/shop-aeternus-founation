@@ -35,15 +35,15 @@ const Dashboard = () => {
                                             edit information.</p>
                                     </div>
                                     <div className="box-account box-info">
-                                        <div className="box-head">
+                                        <div className="box-head" style={{paddingBottom:'20px'}}>
                                             <h2>Account Information</h2>
                                         </div>
                                         <Row>
                                             <Col sm="6">
                                                 <div className="box">
-                                                    <div className="box-title">
+                                                    {/* <div className="box-title">
                                                         <h3>Contact Information</h3>
-                                                    </div>
+                                                    </div> */}
                                                     <div className="box-content">
                                                         <h6>{user?.firstName + " " + user?.lastName}</h6>
                                                         <h6>{user?.email}</h6>
@@ -63,16 +63,16 @@ const Dashboard = () => {
                                             </Col>
                                         </Row>
                                         <Row>
-                                            <div className="box-account box-info">
-                                                <div className="box-head">
+                                            <div className="box-account box-info" >
+                                                <div className="box-head" style={{paddingBottom:'20px'}}>
                                                     <h2>Shipping Address</h2>
                                                 </div>
                                                 <Row>
                                                     <Col sm="6">
-                                                        <div className='box'>
-                                                            <div className='box-title'>
+                                                        <div className='box' >
+                                                            {/* <div className='box-title'>
                                                                 <h3>Default Address</h3>
-                                                            </div>
+                                                            </div> */}
 
                                                             <div className="box-content">
                                                                 {userAddress && userAddress.length > 0 ? (
@@ -80,7 +80,7 @@ const Dashboard = () => {
                                                                         {userAddress.map((addressItem, index) => (
                                                                             index === 0 && (
                                                                                 <div key={addressItem._id}>
-                                                                                    <div style={{ position: 'relative' }}>
+                                                                                    {/* <div style={{ position: 'relative' }}>
                                                                                         <div onClick={() => handleOptionsClick(index)} style={{ position: 'absolute', top: '0', right: '0', cursor: 'pointer' }}>
                                                                                             &#10247;
                                                                                         </div>
@@ -90,8 +90,8 @@ const Dashboard = () => {
                                                                                                 <Button className='btn btn-sm' onClick={() => removeAddress(addressItem._id)}>Remove</Button>
                                                                                             </div>
                                                                                         )}
-                                                                                    </div>
-                                                                                    <h5>{`${addressItem.firstName} ${addressItem.lastName}`}</h5>
+                                                                                    </div> */}
+                                                                                    <p>Name: {`${addressItem.firstName} ${addressItem.lastName}`}</p>
                                                                                     <p>Email: {addressItem.email}</p>
                                                                                     <p>Phone: {addressItem.phone}</p>
                                                                                     <p>Address: {`${addressItem.houseNo}, ${addressItem.street}, ${addressItem.city}, ${addressItem.state}, ${addressItem.country} - ${addressItem.postalcode}`}</p>

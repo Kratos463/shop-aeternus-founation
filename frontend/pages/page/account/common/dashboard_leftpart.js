@@ -34,7 +34,7 @@ const Dashboard_LeftPart = () => {
     <div>
       {isMobile && (
         <div className="account-sidebar" onClick={toggleAccountInfo}>
-<a className="popup-btn">my account <FontAwesomeIcon icon={faChevronDown} /></a>
+          <a className="popup-btn">my account <FontAwesomeIcon icon={faChevronDown} /></a>
         </div>
       )}
       <div className="dashboard-left" style={accountInfo ? { left: '0px' } : {}}>
