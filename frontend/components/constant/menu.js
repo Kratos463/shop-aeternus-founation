@@ -1,5 +1,8 @@
 import CategoryContext from "../../helpers/category/CategoryContext";
 
+
+
+
 export const MENUITEMS = [
 
   {
@@ -107,7 +110,7 @@ export const MENUITEMS = [
   {
     title: "Blogs",
     type: "link",
-    path: "/blogs/blog_right_sideba",
+    path: "/blogs/blog_right_sidebar",
   },
   {
     title: "Contact",

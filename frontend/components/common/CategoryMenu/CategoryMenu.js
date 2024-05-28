@@ -119,7 +119,7 @@ const CategoryMenu = () => {
                                                     {subcategoriesMap[category.Category_id] && subcategoriesMap[category.Category_id].length > 4 && (
                                                         <ul className='subcategory-listing' style={{ listStyleType: 'none', padding: 0, margin: '0 0 0 20px' }}>
                                                             {subcategoriesMap[category.Category_id]
-                                                                .slice(4,8)
+                                                                .slice(4,9)
                                                                 .map((subcategory) => (
                                                                     <li
                                                                         key={subcategory.Category_id}
@@ -141,7 +141,7 @@ const CategoryMenu = () => {
                                                     {subcategoriesMap[category.Category_id] && subcategoriesMap[category.Category_id].length > 8 && (
                                                         <ul className='subcategory-listing' style={{ listStyleType: 'none', padding: 0, margin: '0 0 0 20px' }}>
                                                             {subcategoriesMap[category.Category_id]
-                                                                .slice(8)
+                                                                .slice(9)
                                                                 .map((subcategory) => (
                                                                     <li
                                                                         key={subcategory.Category_id}
