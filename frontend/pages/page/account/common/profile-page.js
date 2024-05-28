@@ -83,8 +83,8 @@ const AddressBookPage = () => {
                                                                         </div>
                                                                         {showOptions === index && (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '20px', right: '0', background: '#fff', boxShadow: '0px 0px 5px rgba(0,0,0,0.2)', zIndex: '100', padding: '5px', borderRadius: '5px' }}>
-                                                                                <Button className='btn btn-sm'>Edit</Button>
-                                                                                <Button className='btn btn-sm' onClick={() => removeAddress(addressItem._id)}>Remove</Button>
+                                                                                <Button className='btn btn-sm' onClick={()=>editAddress(addressItem._id)}>Edit</Button>
+                                                                                <Button className='btn btn-sm' onClick={() =>removeAddress(addressItem._id)}>Remove</Button>
                                                                             </div>
                                                                         )}
                                                                     </div>

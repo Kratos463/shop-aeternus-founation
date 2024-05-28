@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       console.log('API URL:', process.env.API_URL);
 
       const response = await axios.post(`${process.env.API_URL}/api/v1/user/login`, { identifier, password }, getConfig());
-      console.log("login",response.data.success)
+      console.log("login", response.data.success)
       if (response.data.success) {
         const token = response.data.token;
         localStorage.setItem('token', token);
@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }) => {
 
   const removeAddress = async (addressId) => {
     try {
-      const response = await axios.delete(`${process.env.API_URL}/api/v1/user/remove-shipping-address/${addressId}`, getConfig());
+      const response = await axios.delete(`${process.env.API_URL}/api/v1/user/update-shipping-address${addressId}`, getConfig());
       if (response.data.success) {
         toast.success("Address Removed");
         getAddressDetails();
@@ -157,6 +157,25 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.error || "Error in address removed");
     }
   };
+
+  const editAddress = async (addressId) => {
+    try {
+      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/edit-shipping-address/${addressId}`, getConfig());
+      if(response.data.success){
+        toast.success("Address updated..")
+        getAddressDetails();
+      }else{
+        toast.error("Failed to update address..")
+      }
+
+    } catch (error) {
+      console.error("Error in updating address", error)
+      toast.error(error.response?.data?.error || "Error in updating addres...")
+    }
+
+  }
+
+
 
   return (
     <AuthContext.Provider value={{
