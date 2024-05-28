@@ -44,24 +44,49 @@ const CartProvider = (props) => {
         colorId: colors.Color_id,
         quantity: quantity,
       };
-
-      
-      setCart((prevCart) => ({
-        ...prevCart,
-        items: [...prevCart.items, newCartItem],
-        total: prevCart.total + product.Price * quantity,
-        itemsQuantity: prevCart.itemsQuantity + quantity,
-      }));
-
+  
+      let itemExists = false;
+      setCart((prevCart) => {
+        const updatedItems = prevCart.items.map((item) => {
+          if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
+            itemExists = true;
+            return {
+              ...item,
+              quantity: item.quantity + quantity,
+            };
+          }
+          return item;
+        });
+  
+        if (!itemExists) {
+          updatedItems.push(newCartItem);
+        }
+  
+        return {
+          ...prevCart,
+          items: updatedItems,
+          total: prevCart.total + product.Price * quantity,
+          itemsQuantity: prevCart.itemsQuantity + quantity,
+        };
+      });
+  
       const response = await axios.post(`${process.env.API_URL}/api/v1/cart/add-cart-item`, newCartItem, getConfig());
-
+  
       if (response.data.success) {
         toast.success("Product added to cart");
         displayCartProduct();
       } else {
-        
         setCart((prevCart) => {
-          const updatedItems = prevCart.items.filter((item) => item.productId !== product.Product_id);
+          const updatedItems = prevCart.items.map((item) => {
+            if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
+              return {
+                ...item,
+                quantity: item.quantity - quantity,
+              };
+            }
+            return item;
+          }).filter((item) => item.quantity > 0);
+  
           return {
             ...prevCart,
             items: updatedItems,
@@ -72,9 +97,17 @@ const CartProvider = (props) => {
         toast.error("Failed to add product to cart");
       }
     } catch (error) {
-      
       setCart((prevCart) => {
-        const updatedItems = prevCart.items.filter((item) => item.productId !== product.Product_id);
+        const updatedItems = prevCart.items.map((item) => {
+          if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
+            return {
+              ...item,
+              quantity: item.quantity - quantity,
+            };
+          }
+          return item;
+        }).filter((item) => item.quantity > 0);
+  
         return {
           ...prevCart,
           items: updatedItems,
@@ -86,7 +119,7 @@ const CartProvider = (props) => {
       toast.error("Failed to add product to cart");
     }
   };
-
+  
   const removeFromCart = async (item) => {
     try {
       
