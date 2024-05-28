@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }) => {
 
   const removeAddress = async (addressId) => {
     try {
-      const response = await axios.delete(`${process.env.API_URL}/api/v1/user/update-shipping-address${addressId}`, getConfig());
+      const response = await axios.delete(`${process.env.API_URL}/api/v1/user/remove-shipping-address/${addressId}`, getConfig());
       if (response.data.success) {
         toast.success("Address Removed");
         getAddressDetails();
@@ -158,14 +158,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const editAddress = async (addressId) => {
+  const editAddress = async (address) => {
+    console.log("edit address")
     try {
-      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/edit-shipping-address/${addressId}`, getConfig());
+      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/update-shipping-address`,{address}, getConfig());
+      
       if(response.data.success){
         toast.success("Address updated..")
         getAddressDetails();
       }else{
-        toast.error("Failed to update address..")
+        // toast.error("Failed to update address..")
       }
 
     } catch (error) {
@@ -180,7 +182,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, loading, login, logout, updateUserDetails, updateUserPassword,
-      userAddress, addAddress, removeAddress
+      userAddress, addAddress, removeAddress,editAddress
     }}>
       {children}
     </AuthContext.Provider>
