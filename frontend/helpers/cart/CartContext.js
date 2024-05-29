@@ -32,6 +32,9 @@ const CartProvider = (props) => {
   };
 
   const addToCart = async (product, colors, sizes, quantity) => {
+    // console.log("add to cart is working.....")
+    console.log("product is ",product)
+    
     try {
       const newCartItem = {
         productId: product.Product_id,
@@ -44,7 +47,6 @@ const CartProvider = (props) => {
         colorId: colors.Color_id,
         quantity: quantity,
       };
-  
       let itemExists = false;
       setCart((prevCart) => {
         const updatedItems = prevCart.items.map((item) => {
