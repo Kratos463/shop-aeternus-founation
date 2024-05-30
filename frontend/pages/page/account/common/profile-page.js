@@ -67,12 +67,12 @@ const AddressBookPage = () => {
         <section className="section-b-space">
             <Container>
                 <Row>
-                    <Col lg='3'>
+                    <Col lg='3' style={{ position: 'sticky', left: 0, zIndex: 1 }}>
                         <Dashboard_LeftPart />
                     </Col>
 
-                    <Col lg="9">
-                        <div className="dashboard-right">
+                    <Col lg="9" className="dashboard-right"  style={{ overflowX: 'hidden' }}>
+                        <div className="dashboard-right" style={{ overflowX: 'auto', paddingRight: '16px' }}>
                             <div className="dashboard">
                                 <div className="checkout-page">
                                     <div className="checkout-form">
