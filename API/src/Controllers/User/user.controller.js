@@ -231,8 +231,9 @@ const getAddress = asyncHandler(async (req, res) => {
 })
 
 const deleteAddress = asyncHandler(async (req, res) => {
-    const { addressId } = req.params;
 
+    const { addressId } = req.params;
+    console.log(addressId)
     if (!addressId) {
         throw new ApiError(400, "Address Id not provided")
     }
@@ -261,9 +262,63 @@ const deleteAddress = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Address Remove Successfully"));
 })
 
-const updateAddress = asyncHandler(async (req, res) => {
 
-})
+const updateAddress = asyncHandler(async (req, res) => {
+   
+
+    const { address } = req.body;
+    const { addressId } = address; 
+    const address_Data =address.address;
+
+    
+    // Validate required fields
+    if (!addressId) {
+        return res.status(400).json({ error: "Address ID is required" });
+    }
+
+    // Find the user's address in the database
+    const userAddress = await Address.findOne({ userId: req.user._id });
+    // console.log(userAddress)
+
+    if (!userAddress) {
+        return res.status(404).json({ error: "User's address not found" });
+    }
+
+    // Find the address to be updated
+    const addressToUpdate = userAddress.address.find(addr => addr._id.toString() === addressId);
+
+    // console.log(addressToUpdate)
+
+    if (!addressToUpdate) {
+        return res.status(404).json({ error: "Address not found" });
+    }
+
+    // Update address fields if they are provided
+    
+
+    if (address_Data.firstName) addressToUpdate.firstName = address_Data.firstName;
+    if (address_Data.lastName) addressToUpdate.lastName = address_Data.lastName;
+    if (address_Data.email) addressToUpdate.email = address_Data.email;
+    if (address_Data.phone) addressToUpdate.phone = address_Data.phone;
+    if (address_Data.houseNo) addressToUpdate.houseNo = address_Data.houseNo;
+    if (address_Data.street) addressToUpdate.street = address_Data.street;
+    if (address_Data.landmark) addressToUpdate.landmark = address_Data.landmark;
+    if (address_Data.city) addressToUpdate.city = address_Data.city;
+    if (address_Data.state) addressToUpdate.state = address_Data.state;
+    if (address_Data.postalcode) addressToUpdate.postalcode = address_Data.postalcode;
+    if (address_Data.country) addressToUpdate.country = address_Data.country;
+    if (address_Data.alternativePhone) addressToUpdate.alternativePhone = address_Data.alternativePhone;
+    // console.log(userAddress)
+
+    // Save the updated user address
+    await userAddress.save();
+
+    // Return success response
+    return res.status(200).json({ message: "Address updated successfully", address: addressToUpdate });
+});
+
+
+
 
 module.exports = {
     registerUser,
