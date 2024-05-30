@@ -70,7 +70,9 @@ const ProductsProvider = ({ children }) => {
     
     const fetchCategoriesProducts = async (categoryId) => {
         try {
+           
             const response = await axios.get(`/api/getProductByCategory?categoryId=${categoryId}`);
+            
             if (response.data.Records) {
                 setCategoryProduct(Array.isArray(response.data.Records) ? response.data.Records : [response.data.Records]);
             } else {
