@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext,useState} from "react";
 import { Container, Row, Col, Table, Media } from "reactstrap";
 import CartContext from "../../../../helpers/cart/index";
 import { useRouter } from "next/router";
@@ -7,59 +7,85 @@ import WishlistContext from "../../../../helpers/wishlist";
 import { convertPrice } from "../../../../helpers/utils";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
 import axios from "axios";
-import {htmlToText} from 'html-to-text'
+import { htmlToText } from 'html-to-text';
+import { toast } from "react-toastify";
+
+
 
 const WishlistPage = () => {
   const router = useRouter();
   const { wishlistItems, removeFromWishlist } = useContext(WishlistContext);
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, getcartProductById } = useContext(CartContext);
   const { state: selectedCurr } = useContext(CurrencyContext);
+
 
   const checkOut = () => {
     router.push("/page/account/checkout");
   };
 
   // Function to handle adding product to the cart
- 
+
 
   const handleAddToCart = async (productId) => {
-      try {
-          const response = await axios(`/api/getProductDetails?productId=${productId}`);
-          const recordsArray = response.data.Records;
-          
-          // Ensure we get the first product from the array within the Records object
-          const product = recordsArray && recordsArray.length > 0 ? recordsArray[0] : null;
-  
-          if (!product) {
-              console.error("No product found in the response.");
-              return;
-          }
-  
-          // Convert HTML description to plain text
-          const plainTextDescription = htmlToText(product.Description, {
-              wordwrap: 130
-          });
-  
-          // Update the product object with the plain text description
-          product.Description = plainTextDescription;
-  
-         
-          const Default_color = "1";
-          const Default_size = "1";
-  
-          const color = product.colors && product.colors.length > 0 ? product.colors[0] : Default_color;
-          const size = product.sizes && product.sizes.length > 0 ? product.sizes[0] : Default_size;
-          const quantity = product.quantity || 1;
-  
-          // Add product to the cart
-          addToCart(product, color, size, quantity);
-      } catch (error) {
-          console.error("Error adding product to cart:", error);
+    try {
+     
+      const productInCart = await getcartProductById(productId);
+     
+      
+      if (productInCart === true) {
+        // Product is already in the cart, no need to add it again
+        
+        toast.error("Product is already in cart")
+        return;
       }
+
+      if(productInCart === false){
+      // If the product is not in the cart, attempt to add it
+      const response = await axios(`/api/getProductDetails?productId=${productId}`);
+      const recordsArray = response.data.Records;
+
+      // Ensure we get the first product from the array within the Records object
+      const product = recordsArray && recordsArray.length > 0 ? recordsArray[0] : null;
+
+      if (!product) {
+        console.error("No product found in the response.");
+        return;
+      }
+
+      // Convert HTML description to plain text
+      const plainTextDescription = htmlToText(product.Description, {
+        wordwrap: 130
+      });
+
+      // Update the product object with the plain text description
+      product.Description = plainTextDescription;
+
+      const Default_color = "1";
+      const Default_size = "1";
+
+      const color = product.colors && product.colors.length > 0 ? product.colors[0] : Default_color;
+      const size = product.sizes && product.sizes.length > 0 ? product.sizes[0] : Default_size;
+      const quantity = product.quantity || 1;
+
+      // Attempt to add product to the cart
+      const addToCartConfirmation = await addToCart(product, color, size, quantity);
+
+      // Check if the addition to cart was successful
+      if (addToCartConfirmation === "Product successfully added to cart") {
+        // Remove product from wishlist
+        removeFromWishlist({ productId });
+      } else {
+        console.error("Failed to add product to cart");
+      }
+    }
+
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+    }
   };
-  
- 
-  
+
+
+
 
 
 
