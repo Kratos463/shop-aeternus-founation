@@ -1,15 +1,15 @@
 import React, { useState, useContext } from "react";
 import Link from "next/link";
 import CartContext from "../../../../helpers/cart";
-import { Container, Row, Col, Media } from "reactstrap";
+import { Container, Row, Col, Media,Button } from "reactstrap";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
 import { convertPrice } from "../../../../helpers/utils";
 
 
 const CartPage = () => {
 
-  const {cart,  removeFromCart, updateQty} = useContext(CartContext)
-  const { state: selectedCurr} = useContext(CurrencyContext);
+  const { cart, removeFromCart, updateQty } = useContext(CartContext)
+  const { state: selectedCurr } = useContext(CurrencyContext);
   const [quantityError, setQuantityError] = useState(false);
 
   const handleQtyUpdate = (item, quantity) => {
@@ -35,8 +35,8 @@ const CartPage = () => {
                       <th scope="col">product name</th>
                       <th scope="col">price</th>
                       <th scope="col">quantity</th>
-                      <th scope="col">action</th>
                       <th scope="col">total</th>
+                      <th scope="col">action</th>
                     </tr>
                   </thead>
                   {cart.items.map((item, index) => {
@@ -79,24 +79,24 @@ const CartPage = () => {
                               </div>
                               <div className="col-xs-3">
                                 <h2 className="td-color">
-                                {selectedCurr.symbol}
-                                {convertPrice(item.price, selectedCurr)}
+                                  {selectedCurr.symbol}
+                                  {convertPrice(item.price, selectedCurr)}
                                 </h2>
                               </div>
                               <div className="col-xs-3">
                                 <h2 className="td-color">
-                                  
-                                    <i
-                                      className="fa fa-times"
-                                      onClick={() => removeFromCart(item)}></i>
-                                  
+
+                                  <i
+                                    className="fa fa-times"
+                                    onClick={() => removeFromCart(item)}></i>
+
                                 </h2>
                               </div>
                             </div>
                           </td>
                           <td>
                             <h2>
-                            {selectedCurr.symbol}
+                              {selectedCurr.symbol}
                               {convertPrice(item.price, selectedCurr)}
                             </h2>
                           </td>
@@ -119,17 +119,19 @@ const CartPage = () => {
                             </div>
                             {/* {item.qty >= item.stock ? "out of Stock" : ""} */}
                           </td>
-                          <td>
-                            <i
-                              className="fa fa-times"
-                              onClick={() => removeFromCart(item)}></i>
-                          </td>
+
                           <td>
                             <h2 className="td-color">
                               {selectedCurr.symbol}
                               {convertPrice((item.quantity * item.price), selectedCurr)}
-                        
+
                             </h2>
+                          </td>
+                          <td>
+                            
+                            <Button onClick={() => removeFromCart(item)} color="danger">
+                              Remove
+                            </Button>
                           </td>
                         </tr>
                       </tbody>
