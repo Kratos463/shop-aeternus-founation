@@ -1,64 +1,14 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Link from "next/link";
 import { Container, Row } from "reactstrap";
 import { useRouter } from "next/router";
-import CategoryContext from '../../../helpers/category/CategoryContext';
-import FilterContext from '../../../helpers/filter/FilterContext';
-
-const getMenuItems = (categories, subcategoriesMap, router, setSelectedCategory, setSelectedCategoryId) => [
-  {
-    title: "Home",
-    type: "link",
-    path: '/'
-  },
-  {
-    title: "Products",
-    megaMenu: true,
-    megaMenuType: "small",
-    type: "sub",
-    children: Object.values(categories).flat().map(category => {
-      const subcategories = subcategoriesMap[category.Category_id]?.map(subcategory => {
-        return {
-          title: subcategory.Category,
-          type: "link",
-          icon: "icon-placeholder",
-          onClick: () => {
-            const path = `/shop/left_sidebar?category=${subcategory.Category}&brand=&color=&size=&minPrice=500&maxPrice=10000`;
-            setSelectedCategory(subcategory.Category);
-            setSelectedCategoryId(subcategory.Category_id);
-            router.push(path);
-          }
-        };
-      }) || [];
-      
-      return {
-        title: category.Category,
-        type: "sub",
-        children: subcategories
-      };
-    }),
-  },
-  {
-    title: "Blogs",
-    type: "link",
-    path: "/blogs/blog_right_sidebar",
-  },
-  {
-    title: "Contact",
-    type: "link",
-    path: "/page/account/contact",
-  },
-];
+import FilterContext from "../../../helpers/filter/FilterContext";
+import { MENUITEMS } from "../../constant/menu";
 
 const NavBar = () => {
   const [navClose, setNavClose] = useState({ right: "0px" });
   const router = useRouter();
-  const { categories, subcategoriesMap } = useContext(CategoryContext);
-  const { setSelectedCategory, setSelectedCategoryId } = useContext(FilterContext);
-
-  const mainmenu = useMemo(() => {
-    return getMenuItems(categories, subcategoriesMap, router, setSelectedCategory, setSelectedCategoryId);
-  }, [categories, subcategoriesMap, router, setSelectedCategory, setSelectedCategoryId]);
+  const { setSelectedCategory, setSelectedCategoryId } = useContext(FilterContext)
 
   useEffect(() => {
     if (window.innerWidth < 750) {
@@ -106,22 +56,6 @@ const NavBar = () => {
     }
   };
 
-  const setNavActive = (item) => {
-    mainmenu.forEach((menuItem) => {
-      menuItem.active = menuItem === item;
-      menuItem.children?.forEach((submenuItem) => {
-        submenuItem.active = submenuItem === item;
-        submenuItem.children?.forEach((subsubmenuItem) => {
-          subsubmenuItem.active = subsubmenuItem === item;
-        });
-      });
-    });
-  };
-
-  const toggletNavActive = (item) => {
-    item.active = !item.active;
-  };
-
   const openMblNav = (event) => {
     if (event.target.classList.contains("sub-arrow")) return;
 
@@ -134,6 +68,12 @@ const NavBar = () => {
       });
       submenu.classList.add("opensubmenu");
     }
+  };
+
+  const clickCategory = (subcategory) => {
+    router.push(`/shop/left_sidebar?`);
+    setSelectedCategory(subcategory.Category);
+    setSelectedCategoryId(subcategory.Category_id)
   };
 
   return (
@@ -150,7 +90,7 @@ const NavBar = () => {
                 <i className="fa fa-angle-right ps-2" aria-hidden="true"></i>
               </div>
             </li>
-            {mainmenu.map((menuItem, i) => (
+            {MENUITEMS.map((menuItem, i) => (
               <li key={i} className={`${menuItem.megaMenu ? "mega-menu" : ""}`}>
                 {menuItem.type === "link" ? (
                   <Link href={menuItem.path} className="nav-link" onClick={menuItem.onClick || closeNav}>
@@ -160,39 +100,8 @@ const NavBar = () => {
                   <a className="nav-link" onClick={openMblNav}>
                     {menuItem.title}
                     <span className="sub-arrow"></span>
+
                   </a>
-                )}
-                {menuItem.children && !menuItem.megaMenu && (
-                  <ul className="nav-submenu">
-                    {menuItem.children.map((childrenItem, index) => (
-                      <li key={index} className={`${childrenItem.children ? "sub-menu " : ""}`}>
-                        {childrenItem.type === "sub" ? (
-                          <a href="#" onClick={() => toggletNavActive(childrenItem)}>
-                            {childrenItem.title}
-                            {childrenItem.tag === "new" && <span className="new-tag">new</span>}
-                            <i className="fa fa-angle-right ps-2"></i>
-                          </a>
-                        ) : (
-                          <a className="sub-menu-title" onClick={childrenItem.onClick || closeNav}>
-                            {childrenItem.title}
-                            {childrenItem.tag === "new" && <span className="new-tag">new</span>}
-                          </a>
-                        )}
-                        {childrenItem.children && (
-                          <ul className={`nav-sub-childmenu ${childrenItem.active ? "menu-open" : ""}`}>
-                            {childrenItem.children.map((childrenSubItem, key) => (
-                              <li key={key}>
-                                <a className="sub-menu-title" onClick={childrenSubItem.onClick || closeNav}>
-                                  {childrenSubItem.title}
-                                  {childrenSubItem.tag === "new" && <span className="new-tag">new</span>}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
                 )}
                 {menuItem.megaMenu && (
                   <div className={`mega-menu-container${menuItem.megaMenu ? "" : " opensubmenu"}`}>
@@ -200,15 +109,14 @@ const NavBar = () => {
                       <Row>
                         {menuItem.children.map((megaMenuItem, i) => (
                           <div
-                            className={`${
-                              menuItem.megaMenuType === "small"
+                            className={`${menuItem.megaMenuType === "small"
                                 ? "col mega-box"
                                 : menuItem.megaMenuType === "medium"
-                                ? "col-lg-3"
-                                : menuItem.megaMenuType === "large"
-                                ? "col"
-                                : ""
-                            } `}
+                                  ? "col-lg-3"
+                                  : menuItem.megaMenuType === "large"
+                                    ? "col"
+                                    : ""
+                              } `}
                             key={i}
                           >
                             <div className="link-section">
@@ -219,10 +127,10 @@ const NavBar = () => {
                                 <ul>
                                   {megaMenuItem.children.map((subMegaMenuItem, i) => (
                                     <li key={i}>
-                                      <a onClick={subMegaMenuItem.onClick}>
+                                      <Link href="#" onClick={() => clickCategory(subMegaMenuItem)}>
                                         <i className={`icon-${subMegaMenuItem.icon}`}></i>
-                                        {subMegaMenuItem.title}
-                                      </a>
+                                        {subMegaMenuItem.Category}
+                                      </Link>
                                     </li>
                                   ))}
                                 </ul>
