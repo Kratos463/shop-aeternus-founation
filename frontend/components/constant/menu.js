@@ -1,8 +1,3 @@
-import CategoryContext from "../../helpers/category/CategoryContext";
-
-
-
-
 export const MENUITEMS = [
 
   {

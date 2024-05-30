@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Container, Row } from "reactstrap";
 import { useRouter } from "next/router";
 import FilterContext from "../../../helpers/filter/FilterContext";
+import { MENUITEMS } from "../../constant/menu";
 
 const NavBar = () => {
   const [navClose, setNavClose] = useState({ right: "0px" });
@@ -55,22 +56,6 @@ const NavBar = () => {
     }
   };
 
-  const setNavActive = (item) => {
-    mainmenu.forEach((menuItem) => {
-      menuItem.active = menuItem === item;
-      menuItem.children?.forEach((submenuItem) => {
-        submenuItem.active = submenuItem === item;
-        submenuItem.children?.forEach((subsubmenuItem) => {
-          subsubmenuItem.active = subsubmenuItem === item;
-        });
-      });
-    });
-  };
-
-  const toggletNavActive = (item) => {
-    item.active = !item.active;
-  };
-
   const openMblNav = (event) => {
     if (event.target.classList.contains("sub-arrow")) return;
 
@@ -105,7 +90,7 @@ const NavBar = () => {
                 <i className="fa fa-angle-right ps-2" aria-hidden="true"></i>
               </div>
             </li>
-            {mainmenu.map((menuItem, i) => (
+            {MENUITEMS.map((menuItem, i) => (
               <li key={i} className={`${menuItem.megaMenu ? "mega-menu" : ""}`}>
                 {menuItem.type === "link" ? (
                   <Link href={menuItem.path} className="nav-link" onClick={menuItem.onClick || closeNav}>
