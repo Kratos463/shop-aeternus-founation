@@ -40,7 +40,7 @@ const CategoryMenu = () => {
 
     const handleSubcategoryLeave = () => {
         setHoveredSubcategoryId(null);
-    };
+    }; 
 
     const handleCategoryLeave = () => {
         setHoveredCategoryId(null);

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Link from "next/link";
 import { MENUITEMS } from "../../constant/menu";
 import { Container, Row } from "reactstrap";
 import { useRouter } from "next/router";
+import FilterContext from "../../../helpers/filter/FilterContext";
 
 const NavBar = () => {
   const [navClose, setNavClose] = useState({ right: "0px" });
   const router = useRouter();
+  const { setSelectedCategory, setSelectedCategoryId } = useContext(FilterContext)
 
   useEffect(() => {
     if (window.innerWidth < 750) {
@@ -101,6 +103,12 @@ const NavBar = () => {
     }
   };
 
+  const clickCategory = (subcategory) => {
+    router.push(`/shop/left_sidebar?`);
+    setSelectedCategory(subcategory.Category);
+    setSelectedCategoryId(subcategory.Category_id)
+  };
+
   return (
     <div>
       <div className="main-navbar">
@@ -125,40 +133,8 @@ const NavBar = () => {
                   <a className="nav-link" onClick={openMblNav}>
                     {menuItem.title}
                     <span className="sub-arrow"></span>
-                    
+
                   </a>
-                )}
-                {menuItem.children && !menuItem.megaMenu && (
-                  <ul className="nav-submenu">
-                    {menuItem.children.map((childrenItem, index) => (
-                      <li key={index} className={`${childrenItem.children ? "sub-menu " : ""}`}>
-                        {childrenItem.type === "sub" ? (
-                          <a href="#" onClick={() => toggletNavActive(childrenItem)}>
-                            {childrenItem.title}
-                            {childrenItem.tag === "new" && <span className="new-tag">new</span>}
-                            <i className="fa fa-angle-right ps-2"></i>
-                          </a>
-                        ) : (
-                          <Link href={childrenItem.path} className="sub-menu-title" onClick={closeNav}>
-                            {childrenItem.title}
-                            {childrenItem.tag === "new" && <span className="new-tag">new</span>}
-                          </Link>
-                        )}
-                        {childrenItem.children && (
-                          <ul className={`nav-sub-childmenu ${childrenItem.active ? "menu-open" : ""}`}>
-                            {childrenItem.children.map((childrenSubItem, key) => (
-                              <li key={key}>
-                                <Link href={childrenSubItem.path} className="sub-menu-title" onClick={closeNav}>
-                                  {childrenSubItem.title}
-                                  {childrenSubItem.tag === "new" && <span className="new-tag">new</span>}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
                 )}
                 {menuItem.megaMenu && (
                   <div className={`mega-menu-container${menuItem.megaMenu ? "" : " opensubmenu"}`}>
@@ -166,15 +142,14 @@ const NavBar = () => {
                       <Row>
                         {menuItem.children.map((megaMenuItem, i) => (
                           <div
-                            className={`${
-                              menuItem.megaMenuType === "small"
+                            className={`${menuItem.megaMenuType === "small"
                                 ? "col mega-box"
                                 : menuItem.megaMenuType === "medium"
-                                ? "col-lg-3"
-                                : menuItem.megaMenuType === "large"
-                                ? "col"
-                                : ""
-                            } `}
+                                  ? "col-lg-3"
+                                  : menuItem.megaMenuType === "large"
+                                    ? "col"
+                                    : ""
+                              } `}
                             key={i}
                           >
                             <div className="link-section">
@@ -185,9 +160,9 @@ const NavBar = () => {
                                 <ul>
                                   {megaMenuItem.children.map((subMegaMenuItem, i) => (
                                     <li key={i}>
-                                      <Link href={subMegaMenuItem.path}>
+                                      <Link href="#" onClick={() => clickCategory(subMegaMenuItem)}>
                                         <i className={`icon-${subMegaMenuItem.icon}`}></i>
-                                        {subMegaMenuItem.title}
+                                        {subMegaMenuItem.Category}
                                       </Link>
                                     </li>
                                   ))}
