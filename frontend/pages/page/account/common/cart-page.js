@@ -152,7 +152,7 @@ const CartPage = () => {
             </Row>
             <Row className="cart-buttons">
               <Col xs="6">
-                <Link href={`/shop/left_sidebar`} className="btn btn-solid">
+                <Link href={`/`} className="btn btn-solid">
                   continue shopping
                 </Link>
               </Col>

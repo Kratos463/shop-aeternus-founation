@@ -38,6 +38,7 @@ const CheckoutPage = () => {
             await addAddress(data); // Call the addAddress function with form data
             setLoading(false);
             setObj({})
+             
         } catch (error) {
             console.error("Error:", error);
             toast.error(error.response?.data?.error || "Error adding address");
@@ -86,7 +87,7 @@ const CheckoutPage = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <Button className="btn-solid btn" onClick={() => setNewAddressFormVisible(true)}>Add Address</Button>
+                                        <Button className="btn-solid btn" onClick={() => setNewAddressFormVisible(false)}>Add Address</Button>
                                     )}
                                     {newAddressFormVisible && (
                                         <div>
@@ -226,7 +227,7 @@ const CheckoutPage = () => {
                                             </div>
                                             <br />
                                             <br />
-                                            <Button type="submit" className="btn-solid btn">
+                                            <Button type="submit" className="btn-solid btn" >
                                                 Save Address
                                             </Button>
                                         </div>

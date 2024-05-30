@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Form, Row, Col, Button } from "reactstrap";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -6,43 +6,57 @@ import Dashboard_LeftPart from "./dashboard_leftpart";
 import { useAuth } from "../../../../helpers/auth/AuthContext";
 
 const AddressBookPage = () => {
-
-    const { userAddress, addAddress, removeAddress } = useAuth()
-    const [obj, setObj] = useState({});
-    const [loading, setLoading] = useState(false)
+    const { userAddress, addAddress, removeAddress, editAddress } = useAuth();
+    const [editedAddress, setEditedAddress] = useState(null);
+    const [editFormVisible, setEditFormVisible] = useState(false);
     const [newAddressFormVisible, setNewAddressFormVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [showOptions, setShowOptions] = useState(null);
-    const [showExistingAddresses, setShowExistingAddresses] = useState(true);
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm();
+
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+
+    useEffect(() => {
+        if (editedAddress) {
+            for (const key in editedAddress) {
+                setValue(key, editedAddress[key]);
+            }
+            setEditFormVisible(true);
+        }
+    }, [editedAddress, setValue]);
+
+    const toggleEditForm = () => {
+        setEditFormVisible(!editFormVisible);
+    };
 
     const toggleNewAddressForm = () => {
         setNewAddressFormVisible(!newAddressFormVisible);
-        setShowExistingAddresses(!showExistingAddresses);
+    };
+
+    const handleEditClick = (address) => {
+        setEditedAddress(address);
     };
 
     const onSubmit = async (data) => {
         try {
             setLoading(true);
-            await addAddress(data); // Call the addAddress function with form data
+            if (editedAddress) {
+                await editAddress({ addressId: editedAddress._id, address: data });
+                toast.success("Address updated successfully.");
+            } else {
+                await addAddress(data);
+                toast.success("Address added successfully.");
+            }
             setLoading(false);
             reset();
+            setEditedAddress(null);
+            toggleEditForm();
+            toggleNewAddressForm();
         } catch (error) {
             console.error("Error:", error);
-            toast.error(error.response?.data?.error || "Error adding address");
+            toast.error(error.response?.data?.error || "Error adding/updating address");
             setLoading(false);
         }
-    };
-
-
-    const setStateFromInput = (event) => {
-        obj[event.target.name] = event.target.value;
-        setObj(obj);
     };
 
 
@@ -66,11 +80,8 @@ const AddressBookPage = () => {
                                     <div className="checkout-form">
                                         <Form onSubmit={handleSubmit(onSubmit)}>
                                             <Row>
-
-
-
                                                 <Col lg="6" sm="12" xs="12" style={{ paddingLeft: '40px' }}>
-                                                    <div className="checkout-title" >
+                                                    <div className="checkout-title">
                                                         <h3>Billing & Shipping Details</h3>
                                                     </div>
                                                     {userAddress && userAddress.length > 0 ? (
@@ -83,8 +94,8 @@ const AddressBookPage = () => {
                                                                         </div>
                                                                         {showOptions === index && (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '20px', right: '0', background: '#fff', boxShadow: '0px 0px 5px rgba(0,0,0,0.2)', zIndex: '100', padding: '5px', borderRadius: '5px' }}>
-                                                                                <Button className='btn btn-sm'>Edit</Button>
-                                                                                <Button className='btn btn-sm' onClick={() => removeAddress(addressItem._id)}>Remove</Button>
+                                                                                <Button className='btn btn-sm' onClick={()=>handleEditClick(addressItem)}>Edit</Button>
+                                                                                <Button className='btn btn-sm' onClick={() =>removeAddress(addressItem._id)}>Remove</Button>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -105,7 +116,7 @@ const AddressBookPage = () => {
                                                     )}
                                                 </Col>
                                                 <Col>
-                                                    {newAddressFormVisible && (
+                                                    {(newAddressFormVisible || editFormVisible) && (
                                                         <div>
                                                             <div className="row check-out" style={{ paddingTop: '30px' }}>
                                                                 <div className="form-group col-md-6 col-sm-6 col-xs-12">
@@ -114,7 +125,6 @@ const AddressBookPage = () => {
                                                                         className={`${errors.firstName ? "error_border" : ""}`}
                                                                         name="firstName"
                                                                         {...register("firstName", { required: true })}
-                                                                        onChange={setStateFromInput}
                                                                     />
                                                                     <span className="error-message">{errors.firstName && "First name is required"}</span>
                                                                 </div>
@@ -123,37 +133,34 @@ const AddressBookPage = () => {
                                                                     <input type="text"
                                                                         className={`${errors.lastName ? "error_border" : ""}`}
                                                                         name="lastName"
-                                                                        {...register("lastName",)}
-                                                                        onChange={setStateFromInput}
+                                                                        {...register("lastName")}
                                                                     />
                                                                     <span className="error-message">{errors.lastName && "Last name is required"}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-6 col-sm-6 col-xs-12">
                                                                     <div className="field-label">Phone</div>
-                                                                    <input type="text" onChange={setStateFromInput}
-                                                                        name="phone" className={`${errors.phone ? "error_border" : ""}`} {...register("phone", { pattern: /\d+/ })} />
+                                                                    <input type="text"
+                                                                        name="phone" className={`${errors.phone ? "error_border" : ""}`} {...register("phone", { pattern: /\d+/ })}
+                                                                    />
                                                                     <span className="error-message">{errors.phone && "Please enter number for phone."}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-6 col-sm-6 col-xs-12">
                                                                     <div className="field-label">Alternative Phone</div>
-                                                                    <input type="text" name="phone"
+                                                                    <input type="text" name="alternativePhone"
                                                                         className={`${errors.alternativePhone ? "error_border" : ""}`}
                                                                         {...register("alternativePhone", { pattern: /\d+/ })}
-                                                                        onChange={setStateFromInput}
                                                                     />
                                                                     <span className="error-message">{errors.alternativePhone && "Please enter number for phone."}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                                                     <div className="field-label">Email Address</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         className={`${errors.email ? "error_border" : ""}`}
                                                                         type="text"
                                                                         name="email"
                                                                         {...register("email", {
                                                                             pattern: /^\S+@\S+$/i,
                                                                         })}
-                                                                        onChange={setStateFromInput}
                                                                     />
                                                                     <span className="error-message">{errors.email && "Please enter proper email address ."}</span>
                                                                 </div>
@@ -161,89 +168,75 @@ const AddressBookPage = () => {
                                                                     <div className="field-label">House/Flat No</div>
                                                                     <input type="text" className={`${errors.houseNo ? "error_border" : ""}`}
                                                                         name="houseNo"
-                                                                        {...register("houseNo",)}
-                                                                        onChange={setStateFromInput}
+                                                                        {...register("houseNo")}
                                                                     />
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                                                     <div className="field-label">Street</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         className={`${errors.street ? "error_border" : ""}`}
                                                                         type="text"
                                                                         name="street"
                                                                         {...register("street", { required: true, min: 5, max: 120 })}
                                                                         placeholder="Street address"
-                                                                        onChange={setStateFromInput}
                                                                     />
-                                                                    <span className="error-message">{errors.address && "Please right your address ."}</span>
+                                                                    <span className="error-message">{errors.street && "Please enter your address."}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                                                     <div className="field-label">Landmark</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         className={`${errors.landmark ? "error_border" : ""}`}
                                                                         type="text"
                                                                         name="landmark"
                                                                         {...register("landmark")}
                                                                         placeholder="Landmark"
-                                                                        onChange={setStateFromInput}
                                                                     />
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                                                     <div className="field-label">Town/City</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         type="text"
                                                                         className={`${errors.city ? "error_border" : ""}`}
                                                                         name="city"
                                                                         {...register("city", { required: true })}
-                                                                        onChange={setStateFromInput}
                                                                     />
-                                                                    <span className="error-message">{errors.city && "select one city"}</span>
+                                                                    <span className="error-message">{errors.city && "City is required"}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                                                     <div className="field-label">State / County</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         type="text"
                                                                         className={`${errors.state ? "error_border" : ""}`}
                                                                         name="state"
                                                                         {...register("state", { required: true })}
-                                                                        onChange={setStateFromInput}
                                                                     />
-                                                                    <span className="error-message">{errors.state && "select one state"}</span>
+                                                                    <span className="error-message">{errors.state && "State is required"}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-6 col-xs-12">
                                                                     <div className="field-label">Postal Code</div>
                                                                     <input
-                                                                        //className="form-control"
                                                                         type="text"
-                                                                        name="pincode"
+                                                                        name="postalcode"
                                                                         className={`${errors.postalcode ? "error_border" : ""}`}
                                                                         {...register("postalcode", { pattern: /\d+/ })}
-                                                                        onChange={setStateFromInput}
                                                                     />
-                                                                    <span className="error-message">{errors.postalcode && "Required integer"}</span>
+                                                                    <span className="error-message">{errors.postalcode && "Postal code is required"}</span>
                                                                 </div>
                                                                 <div className="form-group col-md-12 col-sm-12 col-xs-12">
                                                                     <div className="field-label">Country</div>
                                                                     <input type="text" className={`${errors.country ? "error_border" : ""}`}
                                                                         name="country"
                                                                         {...register("country", { required: true })}
-                                                                        onChange={setStateFromInput}
+                                                                       
                                                                     />
                                                                     <span className="error-message">{errors.country && "Country is required"}</span>
                                                                 </div>
-
                                                             </div>
-                                                            <br></br>
-                                                            <br></br>
-                                                            <Button type="submit" className="btn-solid btn" >
-                                                                Save Address
+                                                            <br />
+                                                            <Button type="submit" className="btn-solid btn">
+                                                                {editedAddress ? "Save Address" : "Add Address"}
                                                             </Button>
                                                         </div>
-
                                                     )}
                                                 </Col>
                                             </Row>

@@ -11,6 +11,7 @@ const WishlistPage = () => {
   const router = useRouter();
   const { wishlistItems, removeFromWishlist } = useContext(WishlistContext);
   const { addToCart } = useContext(CartContext);
+  
   const { state: selectedCurr } = useContext(CurrencyContext);
 
   const checkOut = () => {

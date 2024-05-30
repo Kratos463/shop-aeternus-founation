@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       console.log('API URL:', process.env.API_URL);
 
       const response = await axios.post(`${process.env.API_URL}/api/v1/user/login`, { identifier, password }, getConfig());
-      console.log("login",response.data.success)
+      console.log("login", response.data.success)
       if (response.data.success) {
         const token = response.data.token;
         localStorage.setItem('token', token);
@@ -158,10 +158,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const editAddress = async (address) => {
+    console.log("edit address")
+    try {
+      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/update-shipping-address`,{address}, getConfig());
+      
+      if(response.data.success){
+        toast.success("Address updated..")
+        getAddressDetails();
+      }else{
+        // toast.error("Failed to update address..")
+      }
+
+    } catch (error) {
+      console.error("Error in updating address", error)
+      toast.error(error.response?.data?.error || "Error in updating addres...")
+    }
+
+  }
+
+
+
   return (
     <AuthContext.Provider value={{
       user, loading, login, logout, updateUserDetails, updateUserPassword,
-      userAddress, addAddress, removeAddress
+      userAddress, addAddress, removeAddress,editAddress
     }}>
       {children}
     </AuthContext.Provider>
