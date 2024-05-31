@@ -118,7 +118,7 @@ const WishlistPage = () => {
                           </Link>
                         </td>
                         <td>
-                          <a href="#">{item.title}</a>
+                          <a href={`/product-details/` + item.productId}>{item.title}</a>
                         </td>
                         <td>
                           <h2>{selectedCurr.symbol}{convertPrice(item.price, selectedCurr)}</h2>
