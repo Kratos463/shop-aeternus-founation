@@ -189,16 +189,16 @@ const NoSidebarPage = ({ pathId }) => {
                         productImages.length > 1 ? (
                           <Slider className="slider-nav" {...sliderNav} asNavFor={nav1} ref={(slider) => setSlider2(slider)}>
                             {productImages.map((item, i) => (
-                              <div key={i}>
-                                <Media src={`https://thebrandtadka.com/images_inventory_products/multiple_images/${item.Img_file}`} alt={item.alt} className="img-fluid" />
+                              <div key={i} >
+                                <Media src={`https://thebrandtadka.com/images_inventory_products/multiple_images/${item.Img_file}`} alt={item.alt} className="img-fluid" style={{height:"50px",width:"50px"}} />
                               </div>
                             ))}
                           </Slider>
                         ) : (
                           <Slider {...sliderNav} asNavFor={nav1} ref={(slider) => setSlider2(slider)}>
                             {productImages.map((item, i) => (
-                              <div key={i}>
-                                <Media src={`https://thebrandtadka.com/images_inventory_products/multiple_images/${item.Img_file}`} alt={item.alt} height="100px" />
+                              <div key={i} >
+                                <Media src={`https://thebrandtadka.com/images_inventory_products/multiple_images/${item.Img_file}`} alt={item.alt}   />
                               </div>
                             ))}
                           </Slider>
