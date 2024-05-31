@@ -42,7 +42,7 @@ const CartContainer = ({ icon }) => {
             </div>
           </Link>
           <ul className="show-div shopping-cart">
-            {cart?.items?.map((item, index) => (
+            {cart?.items?.reverse().map((item, index) => (
               <CartHeader key={index} item={item} total={cart.total} symbol={selectedCurr} />
             ))}
             {cart?.items?.length > 0 ? (
