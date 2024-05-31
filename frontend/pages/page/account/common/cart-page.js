@@ -55,10 +55,22 @@ const CartPage = () => {
                             </Link>
                           </td>
                           <td>
+                           
                             <Link href={`/product-details/` + item.productId}>
-                              {item.title}
+                             {item.title}
                             </Link>
+                            
                             <div className="mobile-cart-content row">
+                            <div className="col-xs-3">
+                                <h2 style={{color:'black',paddingLeft:"300px" ,}}>
+                                {/* <i className="fa fa-trash" onClick={() => removeFromCart(item)}></i> */}
+
+                                <i
+                                    className="fa fa-times"
+                                    onClick={() => removeFromCart(item)}></i>
+                                </h2>
+                              </div>
+                              <div className="col-xs-3" style={{display:'flex',paddingLeft:"100px"}}>
                               <div className="col-xs-3">
                                 <div className="qty-box">
                                   <div className="input-group">
@@ -84,13 +96,6 @@ const CartPage = () => {
                                   {convertPrice(item.price, selectedCurr)}
                                 </h2>
                               </div>
-                              <div className="col-xs-3">
-                                <h2 style={{color:'black'}}>
-
-                                <i
-                                    className="fa fa-times"
-                                    onClick={() => removeFromCart(item)}></i>
-                                </h2>
                               </div>
                             </div>
                           </td>
