@@ -15,6 +15,8 @@ const CartContainer = ({ icon }) => {
 
   const [cartList, setCartList] = useState([]);
 
+  
+
   useEffect(() => {
    
     if (user.user) {

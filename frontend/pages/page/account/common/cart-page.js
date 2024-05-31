@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import Link from "next/link";
 import CartContext from "../../../../helpers/cart";
-import { Container, Row, Col, Media,Button } from "reactstrap";
+import { Container, Row, Col, Media, Button } from "reactstrap";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
 import { convertPrice } from "../../../../helpers/utils";
 
@@ -39,7 +39,7 @@ const CartPage = () => {
                       <th scope="col">action</th>
                     </tr>
                   </thead>
-                  {cart.items.map((item, index) => {
+                  {cart.items.reverse().map((item, index) => {
                     return (
                       <tbody key={item.productId}>
                         <tr>
@@ -50,6 +50,7 @@ const CartPage = () => {
                                   "https://thebrandtadka.com/images_inventory_products/front_images/" + item.image
                                 }
                                 alt=""
+                                style={{ width: '80px', height: '80px' }}
                               />
                             </Link>
                           </td>
@@ -84,12 +85,11 @@ const CartPage = () => {
                                 </h2>
                               </div>
                               <div className="col-xs-3">
-                                <h2 className="td-color">
+                                <h2 style={{color:'black'}}>
 
-                                  <i
+                                <i
                                     className="fa fa-times"
                                     onClick={() => removeFromCart(item)}></i>
-
                                 </h2>
                               </div>
                             </div>
@@ -128,8 +128,8 @@ const CartPage = () => {
                             </h2>
                           </td>
                           <td>
-                            
-                            <Button onClick={() => removeFromCart(item)} color="danger">
+
+                            <Button onClick={() => removeFromCart(item)} color="danger" outline>
                               Remove
                             </Button>
                           </td>
