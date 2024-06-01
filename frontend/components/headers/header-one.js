@@ -31,7 +31,7 @@ const HeaderOne = ({
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("button submit")
+    
 
     if (keyword) {
 
