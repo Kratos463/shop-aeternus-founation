@@ -54,11 +54,13 @@ const CategoryMenu = () => {
 
     return (
         <>
+    
             {showCategoryMenu && (
-                <div className="category-menu-container">
+                <div className="category-menu-container" style={{ margin: 0, padding: 0 }}   >
                     <Container>
-                        <Row>
+                        <Row >
                             {categories?.map((category) => (
+                                
                                 <Col className='category-section-main' key={category.Category_id}
                                     onMouseEnter={() => handleCategoryHover(category.Category_id)}
                                     onMouseLeave={handleCategoryLeave} >
@@ -179,6 +181,7 @@ const CategoryMenu = () => {
         display: flex;          
         padding: 5px 0;
         cursor: pointer;
+       
     }
     .category-section-main{
         position: relative;
@@ -391,8 +394,9 @@ const CategoryMenu = () => {
     }
 `}</style>
 
-                </div >
+                </div > 
             )}
+           
         </>
     );
 };
