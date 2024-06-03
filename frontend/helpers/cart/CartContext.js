@@ -5,6 +5,7 @@ import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
 import { getConfig } from "../utils";
 
+
 const CartProvider = (props) => {
   const { user } = useAuth();
   const [cart, setCart] = useState({ items: [], total: 0, itemsQuantity: 0 });
@@ -19,11 +20,28 @@ const CartProvider = (props) => {
     }
   }, [user]);
 
+
+  const getcartProductById = async (productId) => {
+    try {
+      const response = await axios.get(`${process.env.API_URL}/api/v1/cart/get-cart-itemByid/${productId}`, getConfig());
+
+      const ProductinCart = response.data.data.productInCart;
+      return ProductinCart;
+    } catch (error) {
+      console.log("Error in fetching cart product by id", error)
+      return false;
+    }
+  }
+
+
+
+
   const displayCartProduct = async () => {
     try {
 
       const response = await axios.get(`${process.env.API_URL}/api/v1/cart/get-cart-item`, getConfig());
       setCart(response.data.data);
+
 
     } catch (error) {
       console.error("Error fetching cart products:", error);
@@ -32,25 +50,32 @@ const CartProvider = (props) => {
   };
 
   const addToCart = async (product, colors, sizes, quantity) => {
-    // console.log("add to cart is working.....")
-    console.log("product is ",product)
-    
+
     try {
+      // Normalize product object structure
+
+
       const newCartItem = {
-        productId: product.Product_id,
-        skuId: product.Sku_id,
-        title: product.Title,
-        description: product.Description,
-        price: product.Price,
-        image: product.Medium_file,
-        sizeId: sizes.Size_id,
-        colorId: colors.Color_id,
-        quantity: quantity,
+
+        productId: product.Product_id || product.productId,
+        skuId: product.Sku_id || product.skuId,
+        title: product.Title || product.title,
+        description: product.Description || product.description,
+        price: product.Price || product.price,
+        image: product.Medium_file || product.image,
+        sizeId: sizes.Size_id || product.sizeId || sizes,
+        colorId: colors.Color_id || product.colorId || colors,
+        quantity: quantity || 1,
       };
-      let itemExists = false;
+
+
+
+      // Update cart state with newCartItem
       setCart((prevCart) => {
+        let itemExists = false;
+
         const updatedItems = prevCart.items.map((item) => {
-          if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
+          if (item.productId === newCartItem.productId && item.sizeId === newCartItem.sizeId && item.colorId === newCartItem.colorId) {
             itemExists = true;
             return {
               ...item,
@@ -59,72 +84,48 @@ const CartProvider = (props) => {
           }
           return item;
         });
-  
+
         if (!itemExists) {
           updatedItems.push(newCartItem);
         }
-  
+
         return {
           ...prevCart,
           items: updatedItems,
-          total: prevCart.total + product.Price * quantity,
+          total: prevCart.total + newCartItem.price * quantity,
           itemsQuantity: prevCart.itemsQuantity + quantity,
         };
       });
-  
+
+
+
+      // Make API call to add item to cart
       const response = await axios.post(`${process.env.API_URL}/api/v1/cart/add-cart-item`, newCartItem, getConfig());
-  
+
+
       if (response.data.success) {
         toast.success("Product added to cart");
         displayCartProduct();
+        return "Product successfully added to cart"
       } else {
-        setCart((prevCart) => {
-          const updatedItems = prevCart.items.map((item) => {
-            if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
-              return {
-                ...item,
-                quantity: item.quantity - quantity,
-              };
-            }
-            return item;
-          }).filter((item) => item.quantity > 0);
-  
-          return {
-            ...prevCart,
-            items: updatedItems,
-            total: prevCart.total - product.Price * quantity,
-            itemsQuantity: prevCart.itemsQuantity - quantity,
-          };
-        });
         toast.error("Failed to add product to cart");
+        return "failed to add product to cart"
       }
+
+
     } catch (error) {
-      setCart((prevCart) => {
-        const updatedItems = prevCart.items.map((item) => {
-          if (item.productId === product.Product_id && item.sizeId === sizes.Size_id && item.colorId === colors.Color_id) {
-            return {
-              ...item,
-              quantity: item.quantity - quantity,
-            };
-          }
-          return item;
-        }).filter((item) => item.quantity > 0);
-  
-        return {
-          ...prevCart,
-          items: updatedItems,
-          total: prevCart.total - product.Price * quantity,
-          itemsQuantity: prevCart.itemsQuantity - quantity,
-        };
-      });
       console.error("Error adding product to cart:", error);
       toast.error("Failed to add product to cart");
     }
   };
-  
+
+
+
+
+
   const removeFromCart = async (item) => {
     try {
-      
+
       const originalCart = { ...cart };
       setCart((prevCart) => {
         const updatedItems = prevCart.items.filter((cartItem) => cartItem.productId !== item.productId);
@@ -139,12 +140,12 @@ const CartProvider = (props) => {
         toast.success("Product removed from cart");
         displayCartProduct();
       } else {
-        
+
         setCart(originalCart);
         toast.error("Failed to remove product from cart");
       }
     } catch (error) {
-      
+
       setCart((prevCart) => ({
         ...prevCart,
         items: [...originalCart.items],
@@ -158,7 +159,7 @@ const CartProvider = (props) => {
 
   const updateQty = async (item, quantity) => {
     try {
-      
+
       const originalCart = { ...cart };
       setCart((prevCart) => {
         const updatedItems = prevCart.items.map((cartItem) =>
@@ -178,18 +179,18 @@ const CartProvider = (props) => {
       );
 
 
-    
+
 
       if (response.data.success) {
         toast.success("Product quantity updated");
         displayCartProduct();
       } else {
-        
+
         setCart(originalCart);
         toast.error("Failed to update product quantity");
       }
     } catch (error) {
-      
+
       setCart(originalCart);
       console.error("Error updating product quantity:", error);
       toast.error("Failed to update product quantity");
@@ -206,6 +207,7 @@ const CartProvider = (props) => {
         addToCart,
         removeFromCart,
         updateQty,
+        getcartProductById,
       }}
     >
       {props.children}

@@ -31,7 +31,7 @@ const HeaderOne = ({
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("button submit")
+    
 
     if (keyword) {
 
@@ -96,8 +96,8 @@ const HeaderOne = ({
 
 
   return (
-    <div>
-      <header id="sticky" className={`sticky ${headerClass}`}>
+    <div >
+      <header id="sticky" className={`sticky ${headerClass}`}  >
         <div className="mobile-fix-option"></div>
         {/*Top Header Component*/}
         {noTopBar ? "" : <TopBarDark topClass={topClass} />}

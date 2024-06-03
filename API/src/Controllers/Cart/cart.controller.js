@@ -6,7 +6,9 @@ const Cart = require('../../Models/cart.model.js');
 
 
 const addProductToCart = asyncHandler(async (req, res) => {
+   
     const { productId, skuId, title, description, price, image, sizeId, colorId, quantity } = req.body;
+    
 
     // Validate required fields
     if (
@@ -52,12 +54,31 @@ const addProductToCart = asyncHandler(async (req, res) => {
     cart.total = cart.items.reduce((total, item) => total + parseFloat(item.price) * item.quantity, 0);
     cart.itemsQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
 
-    // Save the cart to the database
     await cart.save();
 
-    // Return success response
     return res.status(201).json(new ApiResponse(200, {}, "Item added to cart."));
 });
+
+
+const getCartProductById = asyncHandler(async (req, res) => {
+    
+    const { productId } = req.params;
+   
+
+    const cart = await Cart.findOne({ userId: req.user._id });
+
+    if (!cart) {
+        return res.status(404).json(new ApiResponse(404, null, "Cart not found"));
+    }
+
+    const productInCart = cart.items.some(item => item.productId === productId);
+   
+
+    return res.status(200).json(new ApiResponse(200, { productInCart }, "Product in cart status fetched"));
+});
+
+
+
 
 const getCartProducts = asyncHandler(async (req, res) => {
 
@@ -144,6 +165,7 @@ const updateCartProduct = asyncHandler(async (req, res)=> {
 })
 
 module.exports = {
+    getCartProductById,
     addProductToCart,
     getCartProducts,
     removeCartProduct,

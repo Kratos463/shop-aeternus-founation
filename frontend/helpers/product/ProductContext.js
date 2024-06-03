@@ -50,7 +50,7 @@ const ProductsProvider = ({ children }) => {
                 } else if (Object.keys(filteredQuery).length === 0) {
                     // Fetch all products only if the query object is empty (no search query)
                     const response = await axios.get('/api/getProductList');
-                    console.log("response from the productcontext",response)
+                    // console.log("response from the productcontext",response)
                     if (response.data.Records) {
                         setProducts(Array.isArray(response.data.Records) ? response.data.Records : [response.data.Records]);
                     } else {
@@ -70,7 +70,9 @@ const ProductsProvider = ({ children }) => {
     
     const fetchCategoriesProducts = async (categoryId) => {
         try {
+           
             const response = await axios.get(`/api/getProductByCategory?categoryId=${categoryId}`);
+            
             if (response.data.Records) {
                 setCategoryProduct(Array.isArray(response.data.Records) ? response.data.Records : [response.data.Records]);
             } else {

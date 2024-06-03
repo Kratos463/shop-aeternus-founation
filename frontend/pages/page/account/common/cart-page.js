@@ -1,15 +1,15 @@
 import React, { useState, useContext } from "react";
 import Link from "next/link";
 import CartContext from "../../../../helpers/cart";
-import { Container, Row, Col, Media } from "reactstrap";
+import { Container, Row, Col, Media, Button } from "reactstrap";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
 import { convertPrice } from "../../../../helpers/utils";
 
 
 const CartPage = () => {
 
-  const {cart,  removeFromCart, updateQty} = useContext(CartContext)
-  const { state: selectedCurr} = useContext(CurrencyContext);
+  const { cart, removeFromCart, updateQty } = useContext(CartContext)
+  const { state: selectedCurr } = useContext(CurrencyContext);
   const [quantityError, setQuantityError] = useState(false);
 
   const handleQtyUpdate = (item, quantity) => {
@@ -35,11 +35,11 @@ const CartPage = () => {
                       <th scope="col">product name</th>
                       <th scope="col">price</th>
                       <th scope="col">quantity</th>
-                      <th scope="col">action</th>
                       <th scope="col">total</th>
+                      <th scope="col">action</th>
                     </tr>
                   </thead>
-                  {cart.items.map((item, index) => {
+                  {cart.items.reverse().map((item, index) => {
                     return (
                       <tbody key={item.productId}>
                         <tr>
@@ -50,14 +50,27 @@ const CartPage = () => {
                                   "https://thebrandtadka.com/images_inventory_products/front_images/" + item.image
                                 }
                                 alt=""
+                                style={{ width: '80px', height: '80px' }}
                               />
                             </Link>
                           </td>
                           <td>
-                            <Link href={`/left-sidebar/product/` + item.id}>
-                              {item.title}
+                           
+                            <Link href={`/product-details/` + item.productId}>
+                             {item.title}
                             </Link>
+                            
                             <div className="mobile-cart-content row">
+                            <div className="col-xs-3">
+                                <h2 style={{color:'black',paddingLeft:"300px" ,}}>
+                                {/* <i className="fa fa-trash" onClick={() => removeFromCart(item)}></i> */}
+
+                                <i
+                                    className="fa fa-times"
+                                    onClick={() => removeFromCart(item)}></i>
+                                </h2>
+                              </div>
+                              <div className="col-xs-3" style={{display:'flex',paddingLeft:"100px"}}>
                               <div className="col-xs-3">
                                 <div className="qty-box">
                                   <div className="input-group">
@@ -79,24 +92,16 @@ const CartPage = () => {
                               </div>
                               <div className="col-xs-3">
                                 <h2 className="td-color">
-                                {selectedCurr.symbol}
-                                {convertPrice(item.price, selectedCurr)}
+                                  {selectedCurr.symbol}
+                                  {convertPrice(item.price, selectedCurr)}
                                 </h2>
                               </div>
-                              <div className="col-xs-3">
-                                <h2 className="td-color">
-                                  
-                                    <i
-                                      className="fa fa-times"
-                                      onClick={() => removeFromCart(item)}></i>
-                                  
-                                </h2>
                               </div>
                             </div>
                           </td>
                           <td>
                             <h2>
-                            {selectedCurr.symbol}
+                              {selectedCurr.symbol}
                               {convertPrice(item.price, selectedCurr)}
                             </h2>
                           </td>
@@ -119,17 +124,19 @@ const CartPage = () => {
                             </div>
                             {/* {item.qty >= item.stock ? "out of Stock" : ""} */}
                           </td>
-                          <td>
-                            <i
-                              className="fa fa-times"
-                              onClick={() => removeFromCart(item)}></i>
-                          </td>
+
                           <td>
                             <h2 className="td-color">
                               {selectedCurr.symbol}
                               {convertPrice((item.quantity * item.price), selectedCurr)}
-                        
+
                             </h2>
+                          </td>
+                          <td>
+
+                            <Button onClick={() => removeFromCart(item)} color="danger" outline>
+                              Remove
+                            </Button>
                           </td>
                         </tr>
                       </tbody>

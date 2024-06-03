@@ -54,11 +54,13 @@ const CategoryMenu = () => {
 
     return (
         <>
+    
             {showCategoryMenu && (
-                <div className="category-menu-container">
+                <div className="category-menu-container" style={{ margin: 0, padding: 0 }}   >
                     <Container>
-                        <Row>
+                        <Row >
                             {categories?.map((category) => (
+                                
                                 <Col className='category-section-main' key={category.Category_id}
                                     onMouseEnter={() => handleCategoryHover(category.Category_id)}
                                     onMouseLeave={handleCategoryLeave} >
@@ -179,11 +181,12 @@ const CategoryMenu = () => {
         display: flex;          
         padding: 5px 0;
         cursor: pointer;
+       
     }
     .category-section-main{
         position: relative;
         display: flex;
-        justify-content: center;
+        justify-content: start;
         align-items: center;
     }
    
@@ -217,15 +220,31 @@ const CategoryMenu = () => {
     }
     .category-menu-title {
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        width: 100%;
+         
+        position :relative;
+        white-space: nowrap;
+
 
     }
     
     .category-menu-title h5 {
         color: white;
         font-size: 14px;
+        margin :0;
+        padding:3px;
+    }
+
+    .category-menu-title::after {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 1px;
+        background-color: white;
+        right: 0;
+        top: 0;
+        left: calc(100% + 10px);
     }
 
     .category-menu-content {
@@ -375,8 +394,9 @@ const CategoryMenu = () => {
     }
 `}</style>
 
-                </div >
+                </div > 
             )}
+           
         </>
     );
 };

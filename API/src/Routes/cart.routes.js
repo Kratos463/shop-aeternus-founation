@@ -1,6 +1,7 @@
 const { Router } = require("express")
 const { verifyJWT } = require("../Middleware/auth.middleware.js")
 const {
+    getCartProductById,
     addProductToCart,
     getCartProducts,
     removeCartProduct,
@@ -10,6 +11,7 @@ const {
 const router = Router()
 
 // cart routes
+router.route('/get-cart-itemByid/:productId').get(verifyJWT,getCartProductById)
 router.route('/add-cart-item').post(verifyJWT, addProductToCart)
 router.route('/get-cart-item').get(verifyJWT, getCartProducts)
 router.route('/update-cart-item/:itemId').patch(verifyJWT, updateCartProduct)

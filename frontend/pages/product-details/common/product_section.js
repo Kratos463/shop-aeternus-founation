@@ -101,6 +101,7 @@ const ProductSection = ({ pathId }) => {
                             src={`https://thebrandtadka.com/images_inventory_products/front_images/${product.Product_image}`}
                             className="img-fluid blur-up lazyload bg-img"
                             alt={product.title}
+                           
                           />
                         </div>
                       </div>

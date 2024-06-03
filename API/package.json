@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --experimental-modules index.js",
-    "build" : "npm build"
+    "build": "npm build"
   },
   "repository": {
     "type": "git",

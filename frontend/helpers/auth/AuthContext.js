@@ -59,11 +59,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     setLoading(true);
     try {
-      console.log("login")
+      
       console.log('API URL:', process.env.API_URL);
 
       const response = await axios.post(`${process.env.API_URL}/api/v1/user/login`, { identifier, password }, getConfig());
-      console.log("login", response.data.success)
+      
       if (response.data.success) {
         const token = response.data.token;
         localStorage.setItem('token', token);
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
         toast.success("Login successful");
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || "Error logging in");
+      toast.error(error.response?.data?.error || "Invalid email or password");
     } finally {
       setLoading(false);
     }
