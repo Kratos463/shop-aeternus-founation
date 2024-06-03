@@ -6,16 +6,19 @@ const { ApiResponse } = require('../../utils/apiResponse.js')
 const { serialize } = require("cookie")
 const jwt = require("jsonwebtoken")
 
+// register user api endpoint
 const registerUser = asyncHandler(async (req, res) => {
     const { username, email, firstName, lastName, phone, password, newsletter } = req.body;
 
-    if ([firstName, phone, username, email, password].some((field) => field?.trim() === "")) {
+    if ([firstName, phone, username, email, password].some(field => !field?.trim())) {
         throw new ApiError(400, "All fields are required");
     }
 
+    // Ensure that email and username have indexes
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
-    });
+    }).lean().exec(); // Use lean() for faster read
+
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists");
     }
@@ -24,49 +27,49 @@ const registerUser = asyncHandler(async (req, res) => {
     const origin = req.get('origin') || req.get('referer');
     const isFromMetafortunaverse = origin && origin.includes('metafortunaverse.com');
 
-    const user = await User.create({
-        username: username,
-        firstName: firstName,
-        lastName: lastName,
-        phone: phone,
-        email: email,
-        password: password,
-        newsletter: newsletter,
+    const user = new User({
+        username,
+        firstName,
+        lastName,
+        phone,
+        email,
+        password, // Make sure password hashing is optimized
+        newsletter,
         mfvUser: isFromMetafortunaverse
     });
 
-    const createdUser = await User.findById(user._id).select("-password");
+    await user.save(); // Save the user
+
+    const createdUser = await User.findById(user._id).select("-password").lean().exec();
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
 
-    return res.status(201).json(
-        new ApiResponse(200, "User Created", "User registered Successfully")
-    );
+    return res.status(201).json(new ApiResponse(200, "User Created", "User registered Successfully"));
 });
 
+// login user api endpoint
 const loginUser = asyncHandler(async (req, res) => {
-
     const { identifier, password } = req.body;
 
-    if ([identifier, password].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "Please provide all the fields information")
+    if ([identifier, password].some(field => !field?.trim())) {
+        throw new ApiError(400, "Please provide all the fields information");
     }
 
     // Check if user exists with email or username
     const user = await User.findOne({
         $or: [{ email: identifier }, { username: identifier }]
-    });
+    }).exec();
 
     if (!user) {
-        throw new ApiError(400, "User not exists")
+        throw new ApiError(400, "User does not exist");
     }
 
     // Validate the password
-    const isValidPassword = await user.isPasswordCorrect(password)
+    const isValidPassword = await user.isPasswordCorrect(password);
 
     if (!isValidPassword) {
-        throw new ApiError(400, "Invalid credentials")
+        throw new ApiError(400, "Invalid credentials");
     }
 
     // Create token data
@@ -96,9 +99,10 @@ const loginUser = asyncHandler(async (req, res) => {
         message: "Login successful",
         success: true,
         token: token
-    })
-})
+    });
+});
 
+// logout user api endpoint
 const logoutUser = asyncHandler(async (req, res) => {
     res.setHeader(
         'Set-Cookie',
@@ -113,6 +117,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Logout successful" });
 });
 
+
+// change current password api endpoint
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
 
@@ -132,12 +138,15 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 })
 
+
+// get current user details api endpoint
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, req.user, "Current user fetched successfully")
     )
 })
 
+// update user profile details api endpoint
 const updateUserDetails = asyncHandler(async (req, res) => {
     const { username, firstName, lastName, newsletter, phone } = req.body;
 
@@ -156,6 +165,8 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 
 })
 
+
+// add address api end point
 const addAddress = asyncHandler(async (req, res) => {
     const { address } = req.body;
 
@@ -215,9 +226,7 @@ const addAddress = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { addAddress };
-
-
+// get address api endpoint
 const getAddress = asyncHandler(async (req, res) => {
 
     // Retrieve the cart data associated with the userId
@@ -230,6 +239,7 @@ const getAddress = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, address, "User address successfully fetched"));
 })
 
+// delete address api endpoint
 const deleteAddress = asyncHandler(async (req, res) => {
     const { addressId } = req.params;
 
@@ -261,9 +271,57 @@ const deleteAddress = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Address Remove Successfully"));
 })
 
-const updateAddress = asyncHandler(async (req, res) => {
 
-})
+// update address api endpoint
+const updateAddress = asyncHandler(async (req, res) => {
+    const { addressId } = req.params;
+    const { address } = req.body;
+
+    // Validate required fields
+    if (!addressId) {
+        throw new ApiError(400, "Address Id not provided");
+    }
+
+    if (!address || !address.firstName || !address.lastName || !address.email || !address.phone || !address.houseNo || !address.street || !address.landmark || !address.city || !address.state || !address.postalcode || !address.country) {
+        return res.status(400).json({ error: "Please provide all the required information" });
+    }
+
+    // Find the user's address document in the database
+    const userAddress = await Address.findOne({ userId: req.user._id });
+
+    if (!userAddress) {
+        return res.status(404).json({ error: "Address not found for the user." });
+    }
+
+    // Find the address by addressId within the user's addresses
+    const addressIndex = userAddress.address.findIndex(item => item.id === addressId);
+
+    if (addressIndex === -1) {
+        return res.status(404).json({ error: "Address not found" });
+    }
+
+    // Update the address fields
+    userAddress.address[addressIndex] = {
+        ...userAddress.address[addressIndex],
+        firstName: address.firstName,
+        lastName: address.lastName,
+        email: address.email,
+        phone: address.phone,
+        houseNo: address.houseNo,
+        street: address.street,
+        landmark: address.landmark,
+        city: address.city,
+        state: address.state,
+        postalcode: address.postalcode,
+        country: address.country,
+        alternativePhone: address.alternativePhone 
+    };
+    
+    await userAddress.save();
+
+    return res.status(200).json(new ApiResponse(200, {}, "Address updated successfully"));
+});
+
 
 module.exports = {
     registerUser,

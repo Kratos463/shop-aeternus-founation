@@ -56,5 +56,27 @@ const deleteReviewByUser = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, {}, 'Review deleted successfully'));
 });
 
+const updateReview = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { reviewId } = req.params;
+    const { reviewText, rating } = req.body;
 
-module.exports = { addReview, getReviewsByProduct, deleteReviewByUser }
+    // Find the review to be updated by its ID and user ID
+    const reviewToUpdate = await Review.findOne({ _id: reviewId, userId });
+
+    if (!reviewToUpdate) {
+        throw new ApiError(404, 'Review not found or you are not authorized to update this review');
+    }
+
+    // Update the review fields
+    reviewToUpdate.reviewText = reviewText || reviewToUpdate.reviewText;
+    reviewToUpdate.rating = rating || reviewToUpdate.rating;
+
+    // Save the updated review to the database
+    await reviewToUpdate.save();
+
+    res.status(200).json(new ApiResponse(200, reviewToUpdate, 'Review updated successfully'));
+});
+
+
+module.exports = { addReview, getReviewsByProduct, deleteReviewByUser, updateReview }
