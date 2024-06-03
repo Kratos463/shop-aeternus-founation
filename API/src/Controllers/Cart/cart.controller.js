@@ -4,7 +4,6 @@ const { ApiResponse } = require('../../utils/apiResponse.js');
 const Cart = require('../../Models/cart.model.js');
 
 
-
 const addProductToCart = asyncHandler(async (req, res) => {
    
     const { productId, skuId, title, description, price, image, sizeId, colorId, quantity } = req.body;
@@ -76,8 +75,6 @@ const getCartProductById = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, { productInCart }, "Product in cart status fetched"));
 });
-
-
 
 
 const getCartProducts = asyncHandler(async (req, res) => {

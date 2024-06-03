@@ -6,7 +6,8 @@ const bodyParser = require('body-parser');
 const app = express();
 
 // Define the whitelist for CORS
-var whitelist = ['http://localhost:3000', 'https://metafortunaverse.com']
+var whitelist = ['http://localhost:3000', 'https://shop.aeternus.foundation', 'https://metafortunaverse.com', 
+'https://bot.aeternus.foundation']
 
 var corsOptions = {
   origin: function (origin, callback) {
@@ -41,6 +42,8 @@ const userRoutes = require('./Routes/user.routes.js');
 const cartRoutes = require("./Routes/cart.routes.js")
 const wishlistRoutes = require("./Routes/wishlist.routes.js")
 const reviewRoutes = require("./Routes/review.routes.js")
+const blogRoutes = require("./Routes/blog.routes.js")
+const voucherRoutes = require("./Routes/voucher.routes.js")
 
 // Apply API key middleware to /api routes
 app.use('/api', apiKeyMiddleware);
@@ -50,5 +53,7 @@ app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/review', reviewRoutes);
+app.use('/api/v1/blog', blogRoutes);
+app.use('/api/v1/voucher', voucherRoutes);
 
 module.exports = { app };
