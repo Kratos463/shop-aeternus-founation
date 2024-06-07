@@ -3,11 +3,14 @@ const Cart = require("../../Models/cart.model");
 const Order = require("../../Models/order.model");
 const Payment = require("../../Models/payment.model");
 const Voucher = require("../../Models/voucher.model");
-const mongoose = require("mongoose")
+const User = require("../../Models/user.model");
+const mongoose = require("mongoose");
+const { asyncHandler } = require("../../utils/asyncHandler");
+const { ApiError } = require("../../utils/apiError");
 
 const createOrder = async (req, res) => {
     try {
-        const { paymentId, voucherCode, addressId } = req.body;
+        const { paymentId, voucherId, addressId } = req.body;
         const userId = req.user._id;
 
         // Check payment status
@@ -18,8 +21,11 @@ const createOrder = async (req, res) => {
             return res.status(400).json({ error: 'Invalid or unsuccessful payment' });
         }
 
-        // Search for the voucher in the database
-        const voucher = await Voucher.findOne({ 'vouchers.code': voucherCode, 'vouchers.isUsed': false, 'vouchers.expiresAt': { $gte: new Date() } });
+        // Find vouchers associated with the user's _id
+        const voucherDocs = await Voucher.find({ userId });
+
+        // Search for the specific voucher within the voucher documents
+        const voucher = voucherDocs.find(voucherDoc => voucherDoc.vouchers.some(voucherObj => voucherObj._id.toString() === voucherId && !voucherObj.isUsed && voucherObj.expiresAt >= new Date()));
 
         // If voucher not found or expired, return error
         if (!voucher) {
@@ -53,7 +59,7 @@ const createOrder = async (req, res) => {
             totalPayAmount: payment.amount,
             totalAmount: cart.total,
             totalBV: cart.totalBV,
-            voucher: voucher._id,
+            voucher: voucherId,
             status: 'Pending'
         });
 
@@ -61,7 +67,8 @@ const createOrder = async (req, res) => {
         await order.save();
 
         // Mark the voucher as used
-        voucher.vouchers[0].isUsed = true;
+        const voucherObj = voucher.vouchers.find(voucherObj => voucherObj._id.toString() === voucherId);
+        voucherObj.isUsed = true;
         await voucher.save();
 
         // Empty the user's cart
@@ -83,7 +90,6 @@ const createOrder = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
 
 const getOrderDetails = async (req, res) => {
     try {
@@ -163,5 +169,140 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
+const gettingBillDetailsForMFVUser = asyncHandler(async (req, res) => {
+    try {
+        const { email } = req.query;
 
-module.exports = { createOrder, getOrderDetails };
+        if (!email) {
+            throw new ApiError(400, "Please provide the email");
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        if (!user.mfvUser) {
+            throw new ApiError(400, "User is not an mfvUser");
+        }
+
+        // Find the user's voucher document
+        const userVoucherDoc = await Voucher.findOne({ userId: user._id });
+
+        if(!userVoucherDoc){
+            throw new ApiError(400, "No voucher found")
+        }
+
+        // Retrieve the orders for the user
+        const orders = await Order.find({ user: user._id });
+
+        // Extract specific fields from each order and include voucher code if available
+        const billDetails = orders.map(order => {
+            let voucherCode = null;
+            if (order.voucher && userVoucherDoc) {
+                const matchingVoucher = userVoucherDoc.vouchers.find(voucher => voucher._id.toString() === order.voucher.toString());
+                if (matchingVoucher) {
+                    voucherCode = matchingVoucher.code;
+                }
+            }
+
+            return {
+                orderId: order._id,
+                totalPayAmount: order.totalPayAmount,
+                totalBV: order.totalBV,
+                billNo: order.billNo,
+                billDate: order.createdAt,
+                voucherCode: voucherCode
+            };
+        });
+
+        // Send the response with the bill details
+        res.status(200).json({
+            success: true,
+            data: billDetails,
+            message: "Bill Details successfully fetched"
+        });
+
+    } catch (error) {
+        // Handle the error and send an appropriate response
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Internal Server Error"
+        });
+    }
+});
+
+const gettingBillDetailsForMFVUserByDate = asyncHandler(async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        if (!startDate || !endDate) {
+            throw new ApiError(400, "Please provide both startDate and endDate");
+        }
+
+        // Convert dates to ISO format for comparison
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new ApiError(400, "Invalid date format. Please use YYYY-MM-DD.");
+        }
+
+        // Retrieve MFV users within the date range
+        const users = await User.find({ mfvUser: true });
+
+        const userIds = users.map(user => user._id);
+
+        // Retrieve orders for MFV users within the date range
+        const orders = await Order.find({
+            user: { $in: userIds },
+            createdAt: { $gte: start, $lte: end }
+        });
+
+        if (orders.length === 0) {
+            throw new ApiError(404, "No orders found within the specified date range");
+        }
+
+        // Find voucher documents for MFV users
+        const voucherDocs = await Voucher.find({ userId: { $in: userIds } });
+
+        // Extract specific fields from each order and include voucher code if available
+        const billDetails = orders.map(order => {
+            const userVoucherDoc = voucherDocs.find(doc => doc.userId.toString() === order.user.toString());
+            let voucherCode = null;
+            if (order.voucher && userVoucherDoc) {
+                const matchingVoucher = userVoucherDoc.vouchers.find(voucher => voucher._id.toString() === order.voucher.toString());
+                if (matchingVoucher) {
+                    voucherCode = matchingVoucher.code;
+                }
+            }
+
+            return {
+                orderId: order._id,
+                totalPayAmount: order.totalPayAmount,
+                totalBV: order.totalBV,
+                billNo: order.billNo,
+                billDate: order.createdAt,
+                voucherCode: voucherCode
+            };
+        });
+
+        // Send the response with the bill details
+        res.status(200).json({
+            success: true,
+            data: billDetails,
+            message: "Bill Details successfully fetched"
+        });
+
+    } catch (error) {
+        // Handle the error and send an appropriate response
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Internal Server Error"
+        });
+    }
+});
+
+
+module.exports = { createOrder, getOrderDetails, gettingBillDetailsForMFVUser, gettingBillDetailsForMFVUserByDate };

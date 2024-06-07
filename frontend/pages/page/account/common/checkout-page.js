@@ -26,6 +26,8 @@ const CheckoutPage = () => {
     const [newAddressFormVisible, setNewAddressFormVisible] = useState(false);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
 
+    console.log("selected voucher", selectedVoucher)
+
     const {
         register,
         handleSubmit,
@@ -63,7 +65,7 @@ const CheckoutPage = () => {
                     method: 'Crypto',
                     transactionId: generate15DigitNumber()
                 },
-                getConfig()
+                getConfig() 
             );
 
             if (response.data.success) {
@@ -71,7 +73,7 @@ const CheckoutPage = () => {
                     `${process.env.API_URL}/api/v1/order/make-order`,
                     {
                         paymentId: response.data.payment._id,
-                        voucherCode: selectedVoucher?.code,
+                        voucherId: selectedVoucher?._id,
                         addressId: selectedAddress._id
                     },
                     getConfig()
