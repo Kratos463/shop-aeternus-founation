@@ -30,7 +30,7 @@ const OrderSuccess = () => {
             <section className="section-b-space">
                 <Container>
                     <Row>
-                        <Col lg="6">
+                        {/* <Col lg="6">
                             <div className="product-order">
                                 <h3>your order details</h3>
 
@@ -69,7 +69,7 @@ const OrderSuccess = () => {
                                     <h3>total <span>{symbol}{cartTotal}</span></h3>
                                 </div>
                             </div>
-                        </Col>
+                        </Col> */}
                         <Col lg="6">
                             <Row className="order-success-sec">
                                 <Col sm="6">

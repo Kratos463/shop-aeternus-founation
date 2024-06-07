@@ -17,7 +17,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // Ensure that email and username have indexes
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
-    }).lean().exec(); // Use lean() for faster read
+    }).lean().exec();
 
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists");

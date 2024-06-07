@@ -14,7 +14,7 @@ const CartComponent = ({ icon, layout }) => {
   const [openSide, setOpenSide] = useState(false);
 
   return (
-    <Fragment>
+    <Fragment>    
       {
         <li
           className="onhover-div mobile-cart"

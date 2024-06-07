@@ -55,7 +55,7 @@ const EditProfilePage = () => {
                             <div className='dashboard-right'>
                                 <div className='dashboard'>
                                     <Col sm="12">
-                                        <h3>Edit Profile DETAILs</h3>
+                                        <h3>Edit Profile Details</h3>
                                         <Form className="theme-form" onSubmit={handleSubmit}>
                                             <Row>
                                                 <Col md="6">

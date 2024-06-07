@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Slider from "react-slick";
 import { Card, Col } from "reactstrap";
-import stats from "../../../public/assets/images/dashboard/stats.png";
+import stats from "../../../public/assets/images/logo/shop-atrno.png";
 
 const LoginSlider = () => {
   const settings = {
@@ -20,8 +20,11 @@ const LoginSlider = () => {
           {[...Array(3)].map((_, i) => (
             <div key={i}>
               <div>
-                <h3>Welcome to Multikart</h3>
-                <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy.</p>
+                <h3>Welcome to Shop Atrno</h3>
+                <p>
+                  Elevate your shopping experience with our carefully curated selection of premium products,
+                  designed to enhance every aspect of your life!
+                </p>
               </div>
             </div>
           ))}

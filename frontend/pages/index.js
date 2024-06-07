@@ -35,11 +35,11 @@ const Fashion = () => {
       <Paragraph title="title1 section-t-space" inner="title-inner1" hrClass={false} desc={"Discover our handpicked selection of top-selling items from various categories, guaranteed to elevate your style and enhance your lifestyle!"} />
       <TopCollection noTitle="null" backImage={true} type="fashion" title="top collection" subtitle="special offer" productSlider={Product4} designClass="section-b-space p-t-0 ratio_asos px-2" noSlider="false" cartClass="cart-info cart-wrap" />
       <Parallax />
-      <SpecialProducts type="fashion" backImage={true} productSlider={Product4} line={true} title="title1 section-t-space" inner="title-inner1" designClass="section-b-space p-t-0 ratio_asos" noSlider="true" cartClass="cart-info cart-wrap" />
+      {/* <SpecialProducts type="fashion" backImage={true} productSlider={Product4} line={true} title="title1 section-t-space" inner="title-inner1" designClass="section-b-space p-t-0 ratio_asos" noSlider="true" cartClass="cart-info cart-wrap" /> */}
       <CategoriesProducts />
 
-      {/* <CollectionBanner2 /> */}
-      {/* <ServiceLayout sectionClass="border-section small-section" /> */}
+      <CollectionBanner2 />
+      <ServiceLayout sectionClass="border-section small-section" />
 
       <MasterFooter footerClass={`footer-light`} footerLayOut={"light-layout upper-footer"} footerSection={"small-section border-section border-top-0"} belowSection={"section-b-space light-layout"} newLatter={true} logoName={"logo.jpg"} />
     </>

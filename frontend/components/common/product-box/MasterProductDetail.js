@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
-import { convertPrice } from "../../../helpers/utils";
+import { calculateBusinessVolume, convertPrice, truncateTitle } from "../../../helpers/utils";
 import { CurrencyContext } from "../../../helpers/Currency/CurrencyContext";
+import { useAuth } from "../../../helpers/auth/AuthContext";
 
 const MasterProductDetail = ({
   product,
@@ -15,7 +16,10 @@ const MasterProductDetail = ({
     RatingStars.push(<i className="fa fa-star" key={i}></i>);
   }
 
+  const { user } = useAuth()
   const { state: selectedCurr } = useContext(CurrencyContext);
+  const productPrice = convertPrice(product.Price, selectedCurr);
+  const businessVolume = calculateBusinessVolume(productPrice);
 
 
   return (
@@ -26,26 +30,22 @@ const MasterProductDetail = ({
         ) : (
           ""
         )}
-        <h6>{product?.Title}</h6>
-        {des ? <p>{product?.description}</p> : ""}
+        <h6>{truncateTitle(product?.Title, 22)}</h6>
         <h4>
-          {selectedCurr.symbol}
-          {convertPrice(product.Price, selectedCurr)}.00
-
-          {/* for discount price */}
-          {/* {(
-            (product.price - (product.price * product.discount) / 100) *
-            currency.value
-          ).toFixed(2)} */}
-
-          {/* For discount price */}
-          {/* <del>
-            <span className="money">
-              {currency.symbol}
-              {(product.price * currency.value).toFixed(2)}
-            </span>
-          </del> */}
+          <del>{selectedCurr.symbol}
+            {convertPrice(parseInt(product.Price), selectedCurr)}.00
+          </del>
+          <span>{product.discount} 50% off</span>
         </h4>
+        <h3 className="f-price">
+          Offer Price: {selectedCurr.symbol} {convertPrice(parseInt(product.Price), selectedCurr)}.00
+        </h3>
+        {user?.mfvUser && (
+          <h3 className="bv">
+            BV: <span>{selectedCurr.symbol}{calculateBusinessVolume(productPrice).toFixed(2)}</span>
+          </h3>
+        )}
+
       </div>
     </div>
   );

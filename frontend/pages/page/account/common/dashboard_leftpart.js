@@ -66,6 +66,9 @@ const Dashboard_LeftPart = () => {
               <Link href="/page/account/edit-profile">Edit Profile</Link>
             </li>
             <li>
+              <Link href="/page/account/vouchers">My Vouchers</Link>
+            </li>
+            <li>
               <Link href="/page/account/change-pwd">Change Password</Link>
             </li>
             <li className="last" onClick={logout}>

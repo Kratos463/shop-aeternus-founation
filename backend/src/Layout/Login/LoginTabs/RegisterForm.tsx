@@ -20,7 +20,7 @@ const RegisterForm = () => {
             <Input className="checkbox_animated" id="chk-ani2" type="checkbox" />I agree all statements in{" "}
             <span>
               <a href={Href}>Terms &amp; Conditions</a>
-            </span>
+            </span> 
           </Label>
         </div>
       </div>

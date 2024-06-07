@@ -25,9 +25,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       fetchUserDetails();
-      getAddressDetails();
     }
   }, [token]);
+
+  useEffect(() => {
+    if (user) {
+      getAddressDetails()
+    }
+  }, [user]);
 
   const fetchUserDetails = async () => {
     setLoading(true);
@@ -59,11 +64,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     setLoading(true);
     try {
-      
-      console.log('API URL:', process.env.API_URL);
 
       const response = await axios.post(`${process.env.API_URL}/api/v1/user/login`, { identifier, password }, getConfig());
-      
+
       if (response.data.success) {
         const token = response.data.token;
         localStorage.setItem('token', token);
@@ -161,12 +164,12 @@ export const AuthProvider = ({ children }) => {
   const editAddress = async (address) => {
     console.log("edit address")
     try {
-      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/update-shipping-address`,{address}, getConfig());
-      
-      if(response.data.success){
+      const response = await axios.patch(`${process.env.API_URL}/api/v1/user/update-shipping-address`, { address }, getConfig());
+
+      if (response.data.success) {
         toast.success("Address updated..")
         getAddressDetails();
-      }else{
+      } else {
         // toast.error("Failed to update address..")
       }
 
@@ -182,7 +185,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, loading, login, logout, updateUserDetails, updateUserPassword,
-      userAddress, addAddress, removeAddress,editAddress
+      userAddress, addAddress, removeAddress, editAddress
     }}>
       {children}
     </AuthContext.Provider>

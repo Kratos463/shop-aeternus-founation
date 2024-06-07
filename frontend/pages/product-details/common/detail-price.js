@@ -7,7 +7,7 @@ import { CurrencyContext } from "../../../helpers/Currency/CurrencyContext";
 import CartContext from "../../../helpers/cart";
 import CountdownComponent from "../../../components/common/widgets/countdownComponent";
 import MasterSocial from "./master_social";
-import { convertPrice } from "../../../helpers/utils";
+import { calculateBusinessVolume, convertPrice } from "../../../helpers/utils";
 import { useAuth } from "../../../helpers/auth/AuthContext";
 import WishlistContext from "../../../helpers/wishlist";
 
@@ -17,12 +17,15 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
   const { user } = useAuth();
   const router = useRouter();
   const { addToCart } = useContext(CartContext);
-  const {addToWishlist} = useContext(WishlistContext)
+  const { addToWishlist } = useContext(WishlistContext)
   const { state: selectedCurr } = useContext(CurrencyContext);
   const toggle = () => setModal(!modal);
   const product = item;
   const uniqueSize = [];
-  
+  const productPrice = convertPrice(product.Price, selectedCurr);
+  const businessVolume = calculateBusinessVolume(product.Price);
+
+
   const changeQty = (e) => {
     setQuantity(parseInt(e.target.value));
   };
@@ -44,7 +47,7 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
   // handle function for add product into cart
   const handleAddToCart = () => {
     if (user) {
-      addToCart(product, colors[0], sizes[0], quantity);
+      addToCart(product, quantity, businessVolume, colors[0], sizes[0]);
     } else {
       router.push("/page/account/login");
     }
@@ -64,16 +67,19 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
       <div className={`product-right ${stickyClass}`}>
         <h2> {product.Title} </h2>
         <h4>
-          <del>
-            {selectedCurr.symbol}
+          <del>MRP {selectedCurr.symbol}
             {convertPrice(parseInt(product.Price), selectedCurr)}.00
           </del>
           <span>{product.discount}% off</span>
         </h4>
         <h3>
-          {selectedCurr.symbol}
-          {convertPrice(parseInt(product.Price), selectedCurr)}.00
+          Offer Price: {selectedCurr.symbol} {convertPrice(parseInt(product.Price), selectedCurr)}.00
         </h3>
+        {user?.mfvUser && (
+          <h3 className="bv">
+            Business Volume: <span>{selectedCurr.symbol}{calculateBusinessVolume(productPrice).toFixed(2)}</span>
+          </h3>
+        )}
 
         <div className="product-description border-product">
 
@@ -153,7 +159,7 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
                   <i className="fa fa-angle-left"></i>
                 </button>
               </span>
-              <Input type="number" name="quantity" value={quantity} onChange={changeQty} className="form-control input-number" />
+              <Input type="number" name="quantity" value={quantity} onChange={changeQty} className="form-control input-number" readOnly/>
               <span className="input-group-prepend">
                 <button type="button" className="btn quantity-right-plus" onClick={() => plusQty(product)} data-type="plus" data-field="">
                   <i className="fa fa-angle-right"></i>

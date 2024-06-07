@@ -4,10 +4,12 @@ import CartContext from "../../../../helpers/cart";
 import { Container, Row, Col, Media, Button } from "reactstrap";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
 import { convertPrice } from "../../../../helpers/utils";
+import { useAuth } from "../../../../helpers/auth/AuthContext";
 
 
 const CartPage = () => {
 
+  const { user } = useAuth()
   const { cart, removeFromCart, updateQty } = useContext(CartContext)
   const { state: selectedCurr } = useContext(CurrencyContext);
   const [quantityError, setQuantityError] = useState(false);
@@ -27,7 +29,7 @@ const CartPage = () => {
         <section className="cart-section section-b-space">
           <Container>
             <Row>
-              <Col sm="12">
+              <Col sm="12" md="12">
                 <table className="table cart-table table-responsive-xs">
                   <thead>
                     <tr className="table-head">
@@ -35,6 +37,11 @@ const CartPage = () => {
                       <th scope="col">product name</th>
                       <th scope="col">price</th>
                       <th scope="col">quantity</th>
+                      {
+                        user.mfvUser && (
+                          <th scope="col">BV</th>
+                        )
+                      }
                       <th scope="col">total</th>
                       <th scope="col">action</th>
                     </tr>
@@ -47,7 +54,7 @@ const CartPage = () => {
                             <Link href={`/product-details/` + item.productId}>
                               <Media
                                 src={
-                                  "https://thebrandtadka.com/images_inventory_products/front_images/" + item.image
+                                  "https://thebrandtadka.com/images_inventory_products/front_images/" + item.mediumFile
                                 }
                                 alt=""
                                 style={{ width: '80px', height: '80px' }}
@@ -55,49 +62,9 @@ const CartPage = () => {
                             </Link>
                           </td>
                           <td>
-                           
                             <Link href={`/product-details/` + item.productId}>
-                             {item.title}
+                              {item.title}
                             </Link>
-                            
-                            <div className="mobile-cart-content row">
-                            <div className="col-xs-3">
-                                <h2 style={{color:'black',paddingLeft:"300px" ,}}>
-                                {/* <i className="fa fa-trash" onClick={() => removeFromCart(item)}></i> */}
-
-                                <i
-                                    className="fa fa-times"
-                                    onClick={() => removeFromCart(item)}></i>
-                                </h2>
-                              </div>
-                              <div className="col-xs-3" style={{display:'flex',paddingLeft:"100px"}}>
-                              <div className="col-xs-3">
-                                <div className="qty-box">
-                                  <div className="input-group">
-                                    <input
-                                      type="number"
-                                      name="quantity"
-                                      onChange={(e) =>
-                                        handleQtyUpdate(item, e.target.value)
-                                      }
-                                      className="form-control input-number"
-                                      defaultValue={item.quantity}
-                                      style={{
-                                        borderColor: quantityError && "red",
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                                {/* {item.quantity >= item.stock ? "out of Stock" : ""} */}
-                              </div>
-                              <div className="col-xs-3">
-                                <h2 className="td-color">
-                                  {selectedCurr.symbol}
-                                  {convertPrice(item.price, selectedCurr)}
-                                </h2>
-                              </div>
-                              </div>
-                            </div>
                           </td>
                           <td>
                             <h2>
@@ -111,20 +78,34 @@ const CartPage = () => {
                                 <input
                                   type="number"
                                   name="quantity"
-                                  onChange={(e) =>
-                                    handleQtyUpdate(item, e.target.value)
-                                  }
+                                  onChange={(e) => handleQtyUpdate(item, e.target.value)}
                                   className="form-control input-number"
                                   defaultValue={item.quantity}
                                   style={{
-                                    borderColor: quantityError && "red",
+                                    borderColor: quantityError ? "red" : "",
                                   }}
+                                  // min="1"
+                                  // max={parseInt(item.stockQty)}
                                 />
                               </div>
                             </div>
                             {/* {item.qty >= item.stock ? "out of Stock" : ""} */}
                           </td>
 
+                          {/* business volume */}
+                          {
+                            user.mfvUser && (
+                              <td>
+                                <h2>
+                                  {selectedCurr.symbol}
+                                  {convertPrice((item.bv), selectedCurr)}
+
+                                </h2>
+                              </td>
+                            )
+                          }
+
+                          {/* total price */}
                           <td>
                             <h2 className="td-color">
                               {selectedCurr.symbol}
@@ -132,6 +113,7 @@ const CartPage = () => {
 
                             </h2>
                           </td>
+
                           <td>
 
                             <Button onClick={() => removeFromCart(item)} color="danger" outline>
@@ -193,8 +175,9 @@ const CartPage = () => {
             </Row>
           </Container>
         </section>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

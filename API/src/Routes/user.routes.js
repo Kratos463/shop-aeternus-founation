@@ -30,4 +30,5 @@ router.route('/get-shipping-address').get(verifyJWT, getAddress)
 router.route('/remove-shipping-address/:addressId').delete(verifyJWT, deleteAddress)
 router.route('/update-shipping-address').patch(verifyJWT, updateAddress)
 
+
 module.exports = router

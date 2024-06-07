@@ -44,16 +44,23 @@ const wishlistRoutes = require("./Routes/wishlist.routes.js")
 const reviewRoutes = require("./Routes/review.routes.js")
 const blogRoutes = require("./Routes/blog.routes.js")
 const voucherRoutes = require("./Routes/voucher.routes.js")
+const paymentRoutes = require("./Routes/payment.routes.js")
+const adminRoutes = require("./Routes/admin.routes.js")
+const orderRoutes = require("./Routes/order.routes.js")
 
 // Apply API key middleware to /api routes
 app.use('/api', apiKeyMiddleware);
 
-// Apply user routes to /api/v1/user
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/review', reviewRoutes);
 app.use('/api/v1/blog', blogRoutes);
 app.use('/api/v1/voucher', voucherRoutes);
+app.use('/api/v1/payment', paymentRoutes);
+app.use('/api/v1/order', orderRoutes);
+
+// admin route
+app.use("/api/v1/admin", adminRoutes)
 
 module.exports = { app };

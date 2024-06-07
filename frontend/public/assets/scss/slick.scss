@@ -64,7 +64,9 @@
 .slick-slide {
     float: left;
     height: 100%;
+    border: 0.5px solid rgb(224, 224, 224);
     min-height: 1px;
+    padding-right: 5px;
     [dir="rtl"] & {
         float: right;
     }

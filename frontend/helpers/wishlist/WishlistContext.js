@@ -38,65 +38,45 @@ const WishlistProvider = (props) => {
         sizeId: sizes.Size_id,
         colorId: colors.Color_id,
       };
-  
-      // Check if the product is already in the wishlist
+
       const isAlreadyInWishlist = wishlistItems.some(
         (item) => item.productId === newWishlistItem.productId
       );
-  
+
       if (isAlreadyInWishlist) {
         toast.error("Product is already in wishlist!");
         return;
       }
-  
-   
-      setWishlistItems((prevItems) => [...prevItems, newWishlistItem]);
-  
-     
+
       const response = await axios.post(
         `${process.env.API_URL}/api/v1/wishlist/add-wishlist-item`,
         newWishlistItem,
         getConfig()
       );
-  
+
       if (response.data.success) {
         toast.success("Product added to wishlist successfully!");
         displayWishlistProduct();
       } else {
-        setWishlistItems((prevItems) =>
-          prevItems.filter((item) => item.productId !== newWishlistItem.productId)
-        );
         toast.error("Failed to add product to wishlist");
       }
     } catch (error) {
-      setWishlistItems((prevItems) =>
-        prevItems.filter((item) => item.productId !== newWishlistItem.productId)
-      );
       console.error("Error adding product to wishlist:", error);
       toast.error("Failed to add product to wishlist");
     }
   };
-  
 
   const removeFromWishlist = async (item) => {
     try {
-      
-      const originalWishlist = [...wishlistItems];
-      setWishlistItems((prevItems) => prevItems.filter((wishlistItem) => wishlistItem.productId !== item.productId));
-
       const response = await axios.delete(`${process.env.API_URL}/api/v1/wishlist/remove-wishlist-item/${item.productId}`, getConfig());
 
       if (response.data.success) {
         toast.success("Product removed from wishlist successfully!");
         displayWishlistProduct();
       } else {
-        
-        setWishlistItems(originalWishlist);
         toast.error("Failed to remove product from wishlist");
       }
     } catch (error) {
-      
-      setWishlistItems((prevItems) => [...originalWishlist]);
       console.error("Error removing product from wishlist:", error);
       toast.error("Failed to remove product from wishlist");
     }

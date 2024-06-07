@@ -93,14 +93,14 @@ const CartContainer = ({ icon }) => {
                     {selectedCurr.symbol} {convertPrice(cart.total, selectedCurr)}{" "}
                   </span>
                 </h5>
-              </div>
+              </div>  
             </li>
             <li>
               <div className="buttons view-cart">
                 <Link href={`/page/account/cart`}>view cart</Link>
                 <Link href={`/page/account/checkout`} className="checkout">checkout</Link>
               </div>
-            </li>
+            </li>   
           </div>
         ) : (
           <li>

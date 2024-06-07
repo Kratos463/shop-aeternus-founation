@@ -5,7 +5,6 @@ import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
 import { getConfig } from "../utils";
 
-
 const CartProvider = (props) => {
   const { user } = useAuth();
   const [cart, setCart] = useState({ items: [], total: 0, itemsQuantity: 0 });
@@ -13,145 +12,108 @@ const CartProvider = (props) => {
   const [stock, setStock] = useState("InStock");
 
   useEffect(() => {
-
     if (user) {
-
       displayCartProduct();
     }
   }, [user]);
 
-
   const getcartProductById = async (productId) => {
     try {
-      const response = await axios.get(`${process.env.API_URL}/api/v1/cart/get-cart-itemByid/${productId}`, getConfig());
-
-      const ProductinCart = response.data.data.productInCart;
-      return ProductinCart;
+      const response = await axios.get(
+        `${process.env.API_URL}/api/v1/cart/get-cart-itemByid/${productId}`,
+        getConfig()
+      );
+      return response.data.data.productInCart;
     } catch (error) {
-      console.log("Error in fetching cart product by id", error)
+      console.log("Error in fetching cart product by id", error);
       return false;
     }
-  }
-
-
-
+  };
 
   const displayCartProduct = async () => {
     try {
-
-      const response = await axios.get(`${process.env.API_URL}/api/v1/cart/get-cart-item`, getConfig());
+      const response = await axios.get(
+        `${process.env.API_URL}/api/v1/cart/get-cart-item`,
+        getConfig()
+      );
       setCart(response.data.data);
-
-
     } catch (error) {
       console.error("Error fetching cart products:", error);
       toast.error("Failed to load cart products");
     }
   };
 
-  const addToCart = async (product, colors, sizes, quantity) => {
-
+  const addToCart = async (product, quantity, businessVolume, colors, sizes) => {
     try {
-      // Normalize product object structure
+      let calculatedBusinessVolume = businessVolume;
 
+      if (quantity !== 0) {
+        calculatedBusinessVolume *= quantity;
+      }
 
       const newCartItem = {
-
-        productId: product.Product_id || product.productId,
-        skuId: product.Sku_id || product.skuId,
-        title: product.Title || product.title,
-        description: product.Description || product.description,
-        price: product.Price || product.price,
-        image: product.Medium_file || product.image,
+        productId: product.Product_id,
+        skuId: product.Sku_id,
+        title: product.Title,
+        image: product.Medium_file,
         sizeId: sizes.Size_id || product.sizeId || sizes,
         colorId: colors.Color_id || product.colorId || colors,
         quantity: quantity || 1,
+        categoryId: product.Category_id,
+        productCode: product.Product_code,
+        stockQty: product.Stock_qty,
+        gstPerFirst: product.Gst_per_first,
+        gstPerSecond: product.Gst_per_second,
+        hsnCode: product.Hsn_code,
+        regularPriceSelf: product.Regular_price_self,
+        priceSelf: product.Price_self,
+        pointsAdjustedSelf: product.Points_adjusted_self,
+        shippingChargesSelf: product.Shipping_charges_self,
+        bvSelf: businessVolume.toFixed(2).toString(),
+        saveUptoSelf: product.Save_upto_self,
+        regularPrice: product.Regular_price,
+        price: product.Price || '',
+        pointsAdjusted: product.Points_adjusted,
+        shippingCharges: product.Shipping_charges,
+        bv: calculatedBusinessVolume.toFixed(2).toString(),
+        saveUpto: product.Save_upto,
+        productUrl: product.Product_url,
       };
 
-
-
-      // Update cart state with newCartItem
-      setCart((prevCart) => {
-        let itemExists = false;
-
-        const updatedItems = prevCart.items.map((item) => {
-          if (item.productId === newCartItem.productId && item.sizeId === newCartItem.sizeId && item.colorId === newCartItem.colorId) {
-            itemExists = true;
-            return {
-              ...item,
-              quantity: item.quantity + quantity,
-            };
-          }
-          return item;
-        });
-
-        if (!itemExists) {
-          updatedItems.push(newCartItem);
-        }
-
-        return {
-          ...prevCart,
-          items: updatedItems,
-          total: prevCart.total + newCartItem.price * quantity,
-          itemsQuantity: prevCart.itemsQuantity + quantity,
-        };
-      });
-
-
-
-      // Make API call to add item to cart
-      const response = await axios.post(`${process.env.API_URL}/api/v1/cart/add-cart-item`, newCartItem, getConfig());
-
+      const response = await axios.post(
+        `${process.env.API_URL}/api/v1/cart/add-cart-item`,
+        newCartItem,
+        getConfig()
+      );
 
       if (response.data.success) {
         toast.success("Product added to cart");
         displayCartProduct();
-        return "Product successfully added to cart"
+        return "Product successfully added to cart";
       } else {
         toast.error("Failed to add product to cart");
-        return "failed to add product to cart"
+        return "Failed to add product to cart";
       }
-
-
     } catch (error) {
       console.error("Error adding product to cart:", error);
       toast.error("Failed to add product to cart");
     }
   };
 
-
-
-
-
   const removeFromCart = async (item) => {
     try {
-
-      const originalCart = { ...cart };
-      setCart((prevCart) => {
-        const updatedItems = prevCart.items.filter((cartItem) => cartItem.productId !== item.productId);
-        const updatedTotal = prevCart.total - item.price * item.quantity;
-        const updatedItemsQuantity = prevCart.itemsQuantity - item.quantity;
-        return { ...prevCart, items: updatedItems, total: updatedTotal, itemsQuantity: updatedItemsQuantity };
-      });
-
-      const response = await axios.delete(`${process.env.API_URL}/api/v1/cart/remove-cart-item/${item.productId}`, getConfig());
+      const response = await axios.delete(
+        `${process.env.API_URL}/api/v1/cart/remove-cart-item/${item.productId}`,
+        getConfig()
+      );
 
       if (response.data.success) {
         toast.success("Product removed from cart");
         displayCartProduct();
       } else {
-
-        setCart(originalCart);
         toast.error("Failed to remove product from cart");
       }
     } catch (error) {
-
-      setCart((prevCart) => ({
-        ...prevCart,
-        items: [...originalCart.items],
-        total: originalCart.total,
-        itemsQuantity: originalCart.itemsQuantity,
-      }));
       console.error("Error removing product from cart:", error);
       toast.error("Failed to remove product from cart");
     }
@@ -159,39 +121,19 @@ const CartProvider = (props) => {
 
   const updateQty = async (item, quantity) => {
     try {
-
-      const originalCart = { ...cart };
-      setCart((prevCart) => {
-        const updatedItems = prevCart.items.map((cartItem) =>
-          cartItem.productId === item.productId
-            ? { ...cartItem, quantity: parseInt(quantity) }
-            : cartItem
-        );
-        const updatedTotal = updatedItems.reduce((acc, cur) => acc + cur.price * cur.quantity, 0);
-        const updatedItemsQuantity = updatedItems.reduce((acc, cur) => acc + cur.quantity, 0);
-        return { ...prevCart, items: updatedItems, total: updatedTotal, itemsQuantity: updatedItemsQuantity };
-      });
-
       const response = await axios.patch(
         `${process.env.API_URL}/api/v1/cart/update-cart-item/${item.productId}`,
         { quantity: parseInt(quantity) },
         getConfig()
       );
 
-
-
-
       if (response.data.success) {
         toast.success("Product quantity updated");
         displayCartProduct();
       } else {
-
-        setCart(originalCart);
         toast.error("Failed to update product quantity");
       }
     } catch (error) {
-
-      setCart(originalCart);
       console.error("Error updating product quantity:", error);
       toast.error("Failed to update product quantity");
     }

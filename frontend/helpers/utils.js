@@ -45,4 +45,25 @@ export function formatCustomTimestamp(isoTimestamp) {
   return formattedDate;
 }
 
+export function calculateBusinessVolume(priceStr) {
+  // Convert the string to a number
+  const price = parseFloat(priceStr);
+  if (isNaN(price)) {
+      throw new Error("Invalid price. Please provide a valid number as a string.");
+  }
+
+  // Calculate the 15% business volume
+  const businessVolume = price * 0.15;
+  return businessVolume;
+}
+
+export function generate15DigitNumber() {
+  let randomNumber = '';
+  for (let i = 0; i < 15; i++) {
+    randomNumber += Math.floor(Math.random() * 10);
+  }
+  return randomNumber;
+}
+
+
 

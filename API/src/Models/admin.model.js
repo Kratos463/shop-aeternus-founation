@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 
-// Regular expression for email validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const adminSchema = new mongoose.Schema({
@@ -32,7 +31,7 @@ const adminSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, "Please provide a password"],
-        minlength: [6, "Password must be at least 6 characters long"]
+        minlength: [8, "Password must be at least 6 characters long"]
     },
     type: {
         type: String,

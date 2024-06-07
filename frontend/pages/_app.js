@@ -13,6 +13,7 @@ import { ProductsProvider } from "../helpers/product/ProductContext";
 import CategoryProvider from "../helpers/category/CategoryProvider";
 import '../public/assets/style/categorymenu.css'
 import { AuthProvider } from "../helpers/auth/AuthContext";
+import VoucherProvider from "../helpers/voucher/VoucherContext";
 
 export default function MyApp({ Component, pageProps }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,42 +34,43 @@ export default function MyApp({ Component, pageProps }) {
 
   return (
     <>
-      
-        {isLoading ? (
-          <div className="loader-wrapper">{url === "Christmas" ? <div id="preloader"></div> : <div className="loader"></div>}</div>
-        ) : (
-          <>
-            <Helmet>
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>Shop Atrno - Multi-purpopse E-commerce Website</title>
-            </Helmet>
-            <div>
-              <AuthProvider>
-              
-                  <ProductsProvider>
-                    <CategoryProvider>
-                      <SettingProvider>
-                        
-                          <CurrencyContextProvider>
-                            <CartContextProvider>
-                              <WishlistProvider>
-                                <FilterProvider>
-                                  <Component {...pageProps} />
-                                </FilterProvider>
-                              </WishlistProvider>
-                            </CartContextProvider>
-                          </CurrencyContextProvider>
-                          <ThemeSettings />
-                        
-                      </SettingProvider>
-                    </CategoryProvider>
-                  </ProductsProvider>
-              </AuthProvider>
-              <ToastContainer />
-              <TapTop />
-            </div>
-          </>
-        )}
+
+      {isLoading ? (
+        <div className="loader-wrapper">{url === "Christmas" ? <div id="preloader"></div> : <div className="loader"></div>}</div>
+      ) : (
+        <>
+          <Helmet>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Shop Atrno - Multi-purpopse E-commerce Website</title>
+          </Helmet>
+          <div>
+            <AuthProvider>
+              <VoucherProvider>
+                <ProductsProvider>
+                  <CategoryProvider>
+                    <SettingProvider>
+
+                      <CurrencyContextProvider>
+                        <CartContextProvider>
+                          <WishlistProvider>
+                            <FilterProvider>
+                              <Component {...pageProps} />
+                            </FilterProvider>
+                          </WishlistProvider>
+                        </CartContextProvider>
+                      </CurrencyContextProvider>
+                      <ThemeSettings />
+
+                    </SettingProvider>
+                  </CategoryProvider>
+                </ProductsProvider>
+              </VoucherProvider>
+            </AuthProvider>
+            <ToastContainer />
+            <TapTop />
+          </div>
+        </>
+      )}
     </>
   );
 }

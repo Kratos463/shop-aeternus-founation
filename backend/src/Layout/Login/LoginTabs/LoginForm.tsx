@@ -14,7 +14,7 @@ const LoginForm = () => {
     email: "Test@gmail.com",
     password: "Test@123",
   });
-  const { email, password } = formValues;
+  const { email, password } = formValues; 
   const router = useRouter();
   const handleUserValue = (event: ChangeEvent<HTMLInputElement>) => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
@@ -59,10 +59,6 @@ const LoginForm = () => {
         <Button color="primary" type="submit">
           Login
         </Button>
-      </div>
-      <div className="form-footer">
-        <span>Or Login up with social platforms</span>
-        <SocialMediaIcons />
       </div>
     </Form>
   );

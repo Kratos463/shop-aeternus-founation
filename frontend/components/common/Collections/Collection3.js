@@ -114,7 +114,7 @@ const TopCollection = ({ type, title, subtitle, designClass, noSlider, cartClass
                   </div>
                 </div>
               ) : (
-                products.slice(0, 12).map((product, index) => (
+                products.map((product, index) => (
                   <Col xl="3" sm="6" key={index}>
                     <div>
                       <ProductItems product={product} backImage={backImage} addWishlist={() => contextWishlist.addToWish(product)} title={title} cartClass={cartClass} addCart={() => context.addToCart(product, quantity)} key={index} />
