@@ -92,6 +92,8 @@ const CheckoutPage = () => {
         }
     };
 
+   
+
     return (
         <section className="section-b-space">
             <Container>
@@ -105,7 +107,7 @@ const CheckoutPage = () => {
                                     </div>
                                     {userAddress.length > 0 ? (
                                         <div>
-                                            <h4>Select Address:</h4>
+                                            <h4 style={{color:'#ff4c3b'}}>Select Address:</h4>
                                             {userAddress.map((address, index) => (
                                                 <div key={index} style={{ paddingTop: '20px' }}>
                                                     <input
@@ -285,31 +287,41 @@ const CheckoutPage = () => {
                                             <div className="order-box">
                                                 <div className="title-box">
                                                     <div>
-                                                        Product <span>Total</span>
+                                                        Product <span style={{ marginLeft: 'auto', paddingRight: '15px' }}>  <span> Total </span>  </span>
                                                     </div>
                                                 </div>
-                                                <ul className="qty">
+                                                <ul className="qty" style={{ listStyleType: 'none', padding: 0 }}>
                                                     {cart?.items?.map((item, index) => (
-                                                        <li key={index}>
-                                                            {item.title} × {item.quantity}{" "}
-                                                            <span>
+                                                        <li key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                <img
+                                                                    src={"https://thebrandtadka.com/images_inventory_products/front_images/" + item.mediumFile}
+                                                                    alt={item.title}
+                                                                    style={{ width: '50px', height: '50px', marginRight: '10px' }}
+                                                                />
+                                                                <div style={{ whiteSpace: 'pre-wrap',paddingRight:'55px' }}>
+                                                                    {item.title} × {item.quantity}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ whiteSpace: 'nowrap' }}>
                                                                 {selectedCurr.symbol}
-                                                                {convertPrice(item.price, selectedCurr) * item.quantity}
-                                                            </span>
+                                                                {(convertPrice(item.price, selectedCurr) * item.quantity).toFixed(2)}
+                                                            </div>
                                                         </li>
                                                     ))}
                                                 </ul>
-                                                <ul className="sub-total">
-                                                    <li>
+
+                                                <ul className="sub-total" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
+                                                    <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                         Subtotal{" "}
-                                                        <span className="count">
+                                                        <span className="count" style={{ marginLeft: 'auto', paddingLeft:'110px' }}>
                                                             {selectedCurr.symbol}
-                                                            {convertPrice(cart.total, selectedCurr)}
+                                                            {convertPrice(cart.total, selectedCurr).toFixed(2)}
                                                         </span>
                                                     </li>
-                                                    <li>
+                                                    <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                         Shipping
-                                                        <div className="shipping">
+                                                        <div className="shipping" >
                                                             <div className="shopping-option">
                                                                 <input type="checkbox" name="free-shipping" id="free-shipping" />
                                                                 <label htmlFor="free-shipping">Free Shipping</label>
@@ -317,42 +329,56 @@ const CheckoutPage = () => {
                                                         </div>
                                                     </li>
                                                 </ul>
-                                                <ul className="coupon">
+                                                <ul className="coupon" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
                                                     <li>
-                                                        <div className="coupon-input">
-                                                            <input type="text" placeholder="Enter coupon code" />
-                                                            <button className="btn-solid btn">Apply</button>
+                                                        <div className="coupon-input" style={{ display: 'flex', alignItems: 'center', }}>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter coupon code"
+                                                                style={{ flex: 1, marginRight: '10px', width: '350px', height: '40px' }}
+                                                            />
+                                                            <button
+                                                                className="btn-solid btn"
+                                                                style={{ whiteSpace: 'nowrap', width: '100px', height: '40px' }}
+                                                            >
+                                                                Apply
+                                                            </button>
                                                         </div>
-                                                        <div className="voucher-display">
-                                                            <h4>Available Vouchers</h4>
+
+
+
+                                                        <div className="voucher-display" style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
+                                                            <h4 style={{ marginBottom: '15px', textAlign: 'center' ,fontWeight: 'bold',color:'#ff4c3b' }}>Available Vouchers</h4>
                                                             {vouchers.map((voucher, index) => (
-                                                                <div key={index}>
+                                                                <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                                                                     <input
                                                                         type="radio"
                                                                         id={`voucher-${index}`}
                                                                         name="voucher"
                                                                         value={voucher.code}
                                                                         onChange={() => setSelectedVoucher(voucher)}
+                                                                        style={{ marginRight: '10px' }}
                                                                     />
-                                                                    <label htmlFor={`voucher-${index}`}>{voucher.code}</label>
+                                                                    <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
                                                                 </div>
                                                             ))}
                                                         </div>
+
                                                     </li>
                                                 </ul>
-                                                <ul className="total">
-                                                    <li>
+                                                <ul className="total" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
+                                                    <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                         Total{" "}
                                                         <span className="count">
                                                             {selectedCurr.symbol}
-                                                            {convertPrice(cart.total, selectedCurr)}
+                                                            {convertPrice(cart.total, selectedCurr).toFixed(2)}
                                                         </span>
                                                     </li>
                                                 </ul>
                                             </div>
                                             <div className="payment-box">
                                                 <div className="upper-box">
-                                                    <div className="payment-options">
+                                                    {/* <div className="payment-options">
                                                         <ul>
                                                             <li>
                                                                 <div className="radio-option stripe">
@@ -367,7 +393,7 @@ const CheckoutPage = () => {
                                                                 </div>
                                                             </li>
                                                         </ul>
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                                 {cart.total !== 0 && (
                                                     <div className="text-end">
@@ -405,6 +431,7 @@ const CheckoutPage = () => {
                                         </div>
                                     )}
                                 </Col>
+
                             </Row>
                         </Form>
                     </div>
