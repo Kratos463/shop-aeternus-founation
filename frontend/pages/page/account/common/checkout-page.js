@@ -14,7 +14,7 @@ import axios from "axios";
 const CheckoutPage = () => {
     const cartContext = useContext(CartContext);
     const { vouchers } = useVoucher();
-    const { addAddress, userAddress } = useAuth();
+    const { addAddress, userAddress, user } = useAuth();
     const cartItems = cartContext.state;
     const cart = cartContext.cart;
     const { state: selectedCurr } = useContext(CurrencyContext);
@@ -92,7 +92,8 @@ const CheckoutPage = () => {
         }
     };
 
-   
+    console.log("user is ", user.mfvUser)
+
 
     return (
         <section className="section-b-space">
@@ -107,7 +108,7 @@ const CheckoutPage = () => {
                                     </div>
                                     {userAddress.length > 0 ? (
                                         <div>
-                                            <h4 style={{color:'#ff4c3b'}}>Select Address:</h4>
+                                            <h4 style={{ color: '#ff4c3b' }}>Select Address:</h4>
                                             {userAddress.map((address, index) => (
                                                 <div key={index} style={{ paddingTop: '20px' }}>
                                                     <input
@@ -299,7 +300,7 @@ const CheckoutPage = () => {
                                                                     alt={item.title}
                                                                     style={{ width: '50px', height: '50px', marginRight: '10px' }}
                                                                 />
-                                                                <div style={{ whiteSpace: 'pre-wrap',paddingRight:'55px' }}>
+                                                                <div style={{ whiteSpace: 'pre-wrap', paddingRight: '55px' }}>
                                                                     {item.title} × {item.quantity}
                                                                 </div>
                                                             </div>
@@ -314,7 +315,7 @@ const CheckoutPage = () => {
                                                 <ul className="sub-total" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
                                                     <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                         Subtotal{" "}
-                                                        <span className="count" style={{ marginLeft: 'auto', paddingLeft:'110px' }}>
+                                                        <span className="count" style={{ marginLeft: 'auto', paddingLeft: '110px' }}>
                                                             {selectedCurr.symbol}
                                                             {convertPrice(cart.total, selectedCurr).toFixed(2)}
                                                         </span>
@@ -347,22 +348,25 @@ const CheckoutPage = () => {
 
 
 
-                                                        <div className="voucher-display" style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
-                                                            <h4 style={{ marginBottom: '15px', textAlign: 'center' ,fontWeight: 'bold',color:'#ff4c3b' }}>Available Vouchers</h4>
-                                                            {vouchers.map((voucher, index) => (
-                                                                <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                                                                    <input
-                                                                        type="radio"
-                                                                        id={`voucher-${index}`}
-                                                                        name="voucher"
-                                                                        value={voucher.code}
-                                                                        onChange={() => setSelectedVoucher(voucher)}
-                                                                        style={{ marginRight: '10px' }}
-                                                                    />
-                                                                    <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
+                                                        {user.mfvUser && (
+                                                            <div className="voucher-display" style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
+                                                                <h4 style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold', color: '#ff4c3b' }}>Available Vouchers</h4>
+                                                                {vouchers.map((voucher, index) => (
+                                                                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                                                                        <input
+                                                                            type="radio"
+                                                                            id={`voucher-${index}`}
+                                                                            name="voucher"
+                                                                            value={voucher.code}
+                                                                            onChange={() => setSelectedVoucher(voucher)}
+                                                                            style={{ marginRight: '10px' }}
+                                                                        />
+                                                                        <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
 
                                                     </li>
                                                 </ul>
