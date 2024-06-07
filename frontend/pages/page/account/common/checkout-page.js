@@ -16,6 +16,7 @@ const CheckoutPage = () => {
     const { vouchers } = useVoucher();
     const { addAddress, userAddress, user } = useAuth();
     const cartItems = cartContext.state;
+    const displayCartProduct = cartContext.displayCartProduct
     const cart = cartContext.cart;
     const { state: selectedCurr } = useContext(CurrencyContext);
     const [obj, setObj] = useState({});
@@ -25,8 +26,6 @@ const CheckoutPage = () => {
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [newAddressFormVisible, setNewAddressFormVisible] = useState(false);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
-
-    console.log("selected voucher", selectedVoucher)
 
     const {
         register,
@@ -58,43 +57,57 @@ const CheckoutPage = () => {
 
     const handlePlaceOrder = async () => {
         try {
-            const response = await axios.post(
+            // Check if address is selected
+            if (!selectedAddress || !selectedAddress._id) {
+                toast.error("Please select a shipping address.");
+                return;
+            }
+    
+    
+            if (user.mfvUser && (!selectedVoucher || !selectedVoucher._id)) {
+                toast.error("Please select a voucher.");
+                return;
+            }
+    
+            // Make the payment
+            const paymentResponse = await axios.post(
                 `${process.env.API_URL}/api/v1/payment/make-payment`,
                 {
                     amount: cart.total,
-                    method: 'Crypto',
+                    method: 'Wallet',
                     transactionId: generate15DigitNumber()
                 },
-                getConfig() 
+                getConfig()
             );
-
-            if (response.data.success) {
-                const makeOrder = await axios.post(
+    
+            if (paymentResponse.data.success) {
+                // Make the order
+                const orderResponse = await axios.post(
                     `${process.env.API_URL}/api/v1/order/make-order`,
                     {
-                        paymentId: response.data.payment._id,
+                        paymentId: paymentResponse.data.payment._id,
                         voucherId: selectedVoucher?._id,
                         addressId: selectedAddress._id
                     },
                     getConfig()
                 );
-
-                if (makeOrder.data.success) {
+    
+                if (orderResponse.data.success) {
+                    displayCartProduct()
                     toast.success("Order placed successfully!");
                     router.push('/page/order-success');
                 } else {
-                    toast.error("Failed to place order");
+                    toast.error("Failed to place order.");
                 }
             } else {
-                toast.error("Payment failed");
+                toast.error("Payment failed.");
             }
         } catch (error) {
             console.error("Error:", error);
-            toast.error("Failed to place order");
+            toast.error("Failed to place order.");
         }
     };
-
-    console.log("user is ", user.mfvUser)
+    
 
 
     return (
@@ -353,19 +366,22 @@ const CheckoutPage = () => {
                                                         {user.mfvUser && (
                                                             <div className="voucher-display" style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
                                                                 <h4 style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold', color: '#ff4c3b' }}>Available Vouchers</h4>
-                                                                {vouchers.map((voucher, index) => (
-                                                                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                                                                        <input
-                                                                            type="radio"
-                                                                            id={`voucher-${index}`}
-                                                                            name="voucher"
-                                                                            value={voucher.code}
-                                                                            onChange={() => setSelectedVoucher(voucher)}
-                                                                            style={{ marginRight: '10px' }}
-                                                                        />
-                                                                        <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
-                                                                    </div>
-                                                                ))}
+                                                                {vouchers
+                                                                    .filter(voucher => !voucher.isUsed) // Filter out used vouchers
+                                                                    .map((voucher, index) => (
+                                                                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                                                                            <input
+                                                                                type="radio"
+                                                                                id={`voucher-${index}`}
+                                                                                name="voucher"
+                                                                                value={voucher.code}
+                                                                                onChange={() => setSelectedVoucher(voucher)}
+                                                                                style={{ marginRight: '10px' }}
+                                                                            />
+                                                                            <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
+                                                                        </div>
+                                                                    ))}
+
                                                             </div>
                                                         )}
 

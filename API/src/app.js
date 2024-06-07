@@ -47,6 +47,7 @@ const voucherRoutes = require("./Routes/voucher.routes.js")
 const paymentRoutes = require("./Routes/payment.routes.js")
 const adminRoutes = require("./Routes/admin.routes.js")
 const orderRoutes = require("./Routes/order.routes.js")
+const walletRoutes = require("./Routes/wallet.routes.js")
 
 // Apply API key middleware to /api routes
 app.use('/api', apiKeyMiddleware);
@@ -59,6 +60,7 @@ app.use('/api/v1/blog', blogRoutes);
 app.use('/api/v1/voucher', voucherRoutes);
 app.use('/api/v1/payment', paymentRoutes);
 app.use('/api/v1/order', orderRoutes);
+app.use('/api/v1/wallet', walletRoutes);
 
 // admin route
 app.use("/api/v1/admin", adminRoutes)

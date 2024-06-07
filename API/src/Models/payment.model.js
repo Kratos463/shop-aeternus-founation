@@ -12,7 +12,7 @@ const paymentSchema = new mongoose.Schema({
     },
     method: {
         type: String,
-        enum: ['PayPal', 'Crypto'],
+        enum: ['Wallet', 'Crypto'],
         required: true
     },
     transactionId: {

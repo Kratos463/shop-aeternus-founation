@@ -150,6 +150,7 @@ const CartProvider = (props) => {
         removeFromCart,
         updateQty,
         getcartProductById,
+        displayCartProduct
       }}
     >
       {props.children}
