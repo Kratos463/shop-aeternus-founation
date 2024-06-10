@@ -43,14 +43,9 @@ const CartProvider = (props) => {
     }
   };
 
-  const addToCart = async (product, quantity, businessVolume, colors, sizes) => {
+  const addToCart = async (product, quantity, businessVolume, colors, sizes, offerPrice, discount) => {
     try {
-      let calculatedBusinessVolume = businessVolume;
-
-      if (quantity !== 0) {
-        calculatedBusinessVolume *= quantity;
-      }
-
+      
       const newCartItem = {
         productId: product.Product_id,
         skuId: product.Sku_id,
@@ -69,23 +64,24 @@ const CartProvider = (props) => {
         priceSelf: product.Price_self,
         pointsAdjustedSelf: product.Points_adjusted_self,
         shippingChargesSelf: product.Shipping_charges_self,
-        bvSelf: businessVolume.toFixed(2).toString(),
+        bvSelf: user?.mfvUser ? businessVolume.toFixed(2).toString() : "0",
         saveUptoSelf: product.Save_upto_self,
         regularPrice: product.Regular_price,
         price: product.Price || '',
         pointsAdjusted: product.Points_adjusted,
         shippingCharges: product.Shipping_charges,
-        bv: calculatedBusinessVolume.toFixed(2).toString(),
         saveUpto: product.Save_upto,
         productUrl: product.Product_url,
+        offerPrice: offerPrice,
+        discountPercentage: discount
       };
-
+  
       const response = await axios.post(
         `${process.env.API_URL}/api/v1/cart/add-cart-item`,
         newCartItem,
         getConfig()
       );
-
+  
       if (response.data.success) {
         toast.success("Product added to cart");
         displayCartProduct();
@@ -99,6 +95,7 @@ const CartProvider = (props) => {
       toast.error("Failed to add product to cart");
     }
   };
+  
 
   const removeFromCart = async (item) => {
     try {

@@ -1,15 +1,80 @@
-import React from 'react';
-import { Container, Row, Col, Card, CardBody, Button } from 'reactstrap';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, CardBody, Button, TabContent, TabPane, Nav, NavItem, NavLink } from 'reactstrap';
+import classnames from 'classnames';
 import CommonLayout from '../../../components/shop/common-layout';
 import Dashboard_LeftPart from './common/dashboard_leftpart';
+import { useVoucher } from '../../../helpers/voucher/VoucherContext';
+import { extractDateFromISO } from '../../../helpers/utils';
+
+const isVoucherExpiredOrUsed = (voucher) => {
+    const currentDate = new Date();
+    const expiryDate = new Date(voucher.expiresAt);
+    return voucher.isUsed || expiryDate < currentDate;
+};
+
+const getVoucherStatus = (voucher) => {
+    const currentDate = new Date();
+    const expiryDate = new Date(voucher.expiresAt);
+    if (voucher.isUsed) {
+        return 'Used';
+    } else if (expiryDate < currentDate) {
+        return 'Expired';
+    }
+    return null;
+};
 
 const VouchersPage = () => {
+    const { vouchers } = useVoucher();
+    const [activeTab, setActiveTab] = useState('all');
 
-    const vouchers = [
-        { id: 1, value: "$6", description: "Save $6 on your next purchase", expiryDate: "Expires on 30/06/2024" },
-        { id: 2, value: "$10", description: "Get $10 off for orders above $50", expiryDate: "Expires on 31/07/2024" },
-        // Add more vouchers as needed
-    ];
+    const toggleTab = (tab) => {
+        if (activeTab !== tab) setActiveTab(tab);
+    };
+
+    const renderVouchers = (voucherList) => {
+        return (
+            <Row>
+                {voucherList.map(voucher => {
+                    const expiredOrUsed = isVoucherExpiredOrUsed(voucher);
+                    const voucherStatus = getVoucherStatus(voucher);
+                    return (
+                        <Col lg="4" md="6" key={voucher._id} className="mb-4">
+                            <Card className={`voucher-card ${expiredOrUsed ? 'expired-or-used' : ''}`}>
+                                <CardBody>
+                                    <div className="voucher-value-circle">
+                                        ${voucher.cost}
+                                    </div>
+                                    <p className="voucher-description">
+                                        <span className="voucher-code">{voucher.code}</span>
+                                        <br />
+                                        Get ${voucher.cost} off on your next purchase
+                                    </p>
+                                    <div className="voucher-footer">
+                                        <span className="voucher-expiry">
+                                            {extractDateFromISO(voucher.expiresAt)}
+                                        </span>
+                                        {!expiredOrUsed ? (
+                                            <Button color="primary" className="claim-button btn-sm">
+                                                Claim Now
+                                            </Button>
+                                        ) : (
+                                            <span className="voucher-status">
+                                                {voucherStatus}
+                                            </span>
+                                        )}
+                                    </div>
+                                </CardBody>
+                            </Card>
+                        </Col>
+                    );
+                })}
+            </Row>
+        );
+    };
+
+    const allVouchers = renderVouchers(vouchers);
+    const expiredVouchers = renderVouchers(vouchers.filter(voucher => isVoucherExpiredOrUsed(voucher) && !voucher.isUsed));
+    const usedVouchers = renderVouchers(vouchers.filter(voucher => voucher.isUsed));
 
     return (
         <CommonLayout parent="home" title="profile">
@@ -18,75 +83,103 @@ const VouchersPage = () => {
                     <Row>
                         <Col lg="3">
                             <Dashboard_LeftPart />
-                        </Col> 
+                        </Col>
                         <Col lg='9'>
                             <div className='dashboard-right'>
                                 <div className='dashboard'>
-                                    <Col sm="12">
-                                        <h3>Vouchers</h3>
-                                        <Row>
-                                            {vouchers.map(voucher => (
-                                                <Col lg="4" md="6" key={voucher.id} className="mb-4">
-                                                    <Card className="voucher-card">
-                                                        <CardBody>
-                                                            <div className="voucher-value-circle">
-                                                                {voucher.value}
-                                                            </div>
-                                                            <p className="voucher-description">
-                                                                {voucher.description}
-                                                            </p>
-                                                            <div className="voucher-footer">
-                                                                <span className="voucher-expiry">
-                                                                    {voucher.expiryDate}
-                                                                </span>
-                                                                <Button color="primary" className="claim-button btn-sm">
-                                                                    Claim Now
-                                                                </Button>
-                                                            </div>
-                                                        </CardBody>
-                                                    </Card>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </Col>
+                                    <h3>Vouchers</h3>
+                                    <Nav tabs>
+                                        <NavItem>
+                                            <NavLink
+                                                className={classnames({ active: activeTab === 'all' })}
+                                                onClick={() => { toggleTab('all'); }}
+                                            >
+                                                All Vouchers
+                                            </NavLink>
+                                        </NavItem>
+                                        <NavItem>
+                                            <NavLink
+                                                className={classnames({ active: activeTab === 'expired' })}
+                                                onClick={() => { toggleTab('expired'); }}
+                                            >
+                                                Expired
+                                            </NavLink>
+                                        </NavItem>
+                                        <NavItem>
+                                            <NavLink
+                                                className={classnames({ active: activeTab === 'used' })}
+                                                onClick={() => { toggleTab('used'); }}
+                                            >
+                                                Used
+                                            </NavLink>
+                                        </NavItem>
+                                    </Nav>
+                                    <TabContent activeTab={activeTab} style={{marginTop: "20px"}}>
+                                        <TabPane tabId="all">
+                                            {vouchers.length > 0 ? allVouchers : <p>No vouchers found.</p>}
+                                        </TabPane>
+                                        <TabPane tabId="expired">
+                                            {expiredVouchers}
+                                        </TabPane>
+                                        <TabPane tabId="used">
+                                            {usedVouchers}
+                                        </TabPane>
+                                    </TabContent>
                                 </div>
                             </div>
                         </Col>
                     </Row>
                 </Container>
             </section>
-
             <style jsx>{`
                 .voucher-card {
                     position: relative;
                     text-align: center;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 8px;
+                    border-radius: 10px;
                     padding: 20px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    background-color: #f9f9f9;
+                    box-shadow: 0 4px                     px rgba(0, 0, 0, 0.1);
+                    transition: all 0.3s ease-in-out;
+                    margin-bottom: 20px;
+                }
+
+                .voucher-card.expired-or-used {
+                    background-color: #f0f0f0;
                 }
 
                 .voucher-value-circle {
                     position: absolute;
-                    top: -20px;
+                    top: -25px;
                     left: 50%;
                     transform: translateX(-50%);
                     background: #ff6f61;
                     color: #fff;
                     border-radius: 50%;
-                    width: 60px;
-                    height: 60px;
+                    width: 50px;
+                    height: 50px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
+                    transition: all 0.3s ease-in-out;
+                }
+
+                .voucher-card.expired-or-used .voucher-value-circle {
+                    background: #ccc;
+                    color: #333;
                 }
 
                 .voucher-description {
-                    margin-top: 40px;
-                    font-size: 16px;
+                    margin-top: 30px;
+                    font-size: 14px;
                     color: #333;
+                    text-align: center;
+                }
+
+                .voucher-description .voucher-code {
+                    font-weight: bold;
+                    color: #007bff;
                 }
 
                 .voucher-footer {
@@ -97,17 +190,34 @@ const VouchersPage = () => {
                 }
 
                 .voucher-expiry {
-                    font-size: 14px;
+                    font-size: 12px;
                     color: #888;
                 }
 
                 .claim-button {
-                    font-size: 14px;
-                    padding: 5px;
+                    font-size: 12px;
+                    padding: 5px 15px;
+                    text-transform: uppercase;
+                    border-radius: 20px;
+                }
+
+                .voucher-status {
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #d9534f;
+                }
+
+                .tab-pane p {
+                    margin-top: 20px;
+                    text-align: center;
+                }
+
+                .nav-tabs .nav-link {
+                    cursor: pointer;
                 }
             `}</style>
         </CommonLayout>
     );
-}
+};
 
 export default VouchersPage;

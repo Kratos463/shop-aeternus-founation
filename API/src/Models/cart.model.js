@@ -65,6 +65,14 @@ const itemSchema = new mongoose.Schema({
     price: {
         type: String,
         required: true
+    },
+    offerPrice: {
+        type: Number,
+        required: true
+    },
+    discountPercentage: {
+        type: Number,
+        required: true
     }
 }, { _id: false });
 

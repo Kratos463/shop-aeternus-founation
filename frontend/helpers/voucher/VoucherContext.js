@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { getConfig } from '../utils';
 import { useAuth } from '../auth/AuthContext';
 
@@ -15,7 +14,7 @@ export const VoucherProvider = ({ children }) => {
     const [vouchers, setVouchers] = useState([]);
 
     useEffect(() => {
-        if (user) {
+        if (user?.mfvUser === true) {
             getVouchers();
         }
     }, [user]);

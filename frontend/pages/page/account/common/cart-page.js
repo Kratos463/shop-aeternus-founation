@@ -38,7 +38,7 @@ const CartPage = () => {
                       <th scope="col">price</th>
                       <th scope="col">quantity</th>
                       {
-                        user.mfvUser && (
+                        user?.mfvUser && (
                           <th scope="col">BV</th>
                         )
                       }
@@ -69,7 +69,7 @@ const CartPage = () => {
                           <td>
                             <h2>
                               {selectedCurr.symbol}
-                              {convertPrice(item.price, selectedCurr)}
+                              {item.offerPrice}
                             </h2>
                           </td>
                           <td>
@@ -94,11 +94,11 @@ const CartPage = () => {
 
                           {/* business volume */}
                           {
-                            user.mfvUser && (
+                            user?.mfvUser && (
                               <td>
                                 <h2>
                                   {selectedCurr.symbol}
-                                  {convertPrice((item.bv), selectedCurr)}
+                                  {item.bv}
 
                                 </h2>
                               </td>
@@ -109,7 +109,7 @@ const CartPage = () => {
                           <td>
                             <h2 className="td-color">
                               {selectedCurr.symbol}
-                              {convertPrice((item.quantity * item.price), selectedCurr)}
+                              {item.quantity * item.offerPrice}
 
                             </h2>
                           </td>
@@ -128,10 +128,21 @@ const CartPage = () => {
                 <table className="table cart-table table-responsive-md">
                   <tfoot>
                     <tr>
+                      <td>Shipping fee :</td>
+                      <td>
+                        <h2>
+                          <del>
+                          {selectedCurr.symbol} 
+                            50
+                          </del> <span>Free</span>
+                        </h2>
+                      </td>
+                    </tr>
+                    <tr>
                       <td>total price :</td>
                       <td>
                         <h2>
-                          {selectedCurr.symbol} {convertPrice(cart.total, selectedCurr)}{" "}
+                          {selectedCurr.symbol} {cart.total}{" "}
                         </h2>
                       </td>
                     </tr>

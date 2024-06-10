@@ -27,19 +27,21 @@ const addProductToCart = asyncHandler(async (req, res) => {
         regularPrice,
         pointsAdjusted,
         shippingCharges,
-        bv,
         saveUpto,
         productUrl,
         quantity,
-        price
+        price,
+        offerPrice,
+        discountPercentage
     } = req.body;
 
     // Validate required fields
     if (
         ![productId, skuId, title, image].every(field => typeof field === 'string' && field.trim() !== '') ||
-        typeof quantity !== 'number' || quantity <= 0
+        typeof quantity !== 'number' || quantity <= 0 ||
+        typeof offerPrice !== 'number' || offerPrice <= 0
     ) {
-        throw new ApiError(400, "Please provide all the required fields and ensure quantity is a positive number");
+        throw new ApiError(400, "Please provide all the required fields and ensure quantity and prices are positive numbers");
     }
 
     // Check if the cart exists for the user
@@ -57,18 +59,17 @@ const addProductToCart = asyncHandler(async (req, res) => {
     const existingItemIndex = cart.items.findIndex(item => item.productId === productId && item.skuId === skuId);
 
     if (existingItemIndex !== -1) {
-        // If the item exists, update its quantity
         const existingItem = cart.items[existingItemIndex];
         existingItem.quantity += quantity;
-        existingItem.bv = (parseFloat(existingItem.bvSelf) * existingItem.quantity).toString(); // Update the bv value based on new quantity
+        existingItem.bv = (parseFloat(existingItem.bvSelf) * existingItem.quantity).toFixed(2);
     } else {
         // If the item doesn't exist, add it to the cart
         cart.items.push({
-            productId: productId,
+            productId,
             categoryId: categoryId || '',
             productCode: productCode || '',
-            title: title,
-            skuId: skuId,
+            title,
+            skuId,
             stockQty: stockQty || '',
             mediumFile: image,
             sizeId: sizeId || '',
@@ -85,23 +86,26 @@ const addProductToCart = asyncHandler(async (req, res) => {
             regularPrice: regularPrice || '',
             pointsAdjusted: pointsAdjusted || '',
             shippingCharges: shippingCharges || '',
-            bv: (parseFloat(bvSelf) * quantity).toString(), // Set the bv value based on initial quantity
+            bv: (parseFloat(bvSelf) * quantity).toFixed(2),
             saveUpto: saveUpto || '',
             productUrl: productUrl || '',
-            quantity: quantity,
-            price: price
+            quantity,
+            price,
+            offerPrice,
+            discountPercentage
         });
     }
 
     // Update total price, items quantity, and total BV
-    cart.total = cart.items.reduce((total, item) => total + parseFloat(item.price) * item.quantity, 0);
+    cart.total = cart.items.reduce((total, item) => total + item.offerPrice * item.quantity, 0).toFixed(2);
     cart.itemsQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
-    cart.totalBV = cart.items.reduce((total, item) => total + (parseFloat(item.bv) || 0), 0);
+    cart.totalBV = cart.items.reduce((total, item) => total + (parseFloat(item.bv) || 0), 0).toFixed(2);
 
     await cart.save();
 
     return res.status(201).json(new ApiResponse(200, {}, "Item added to cart."));
 });
+
 
 
 const getCartProductById = asyncHandler(async (req, res) => {
@@ -209,7 +213,7 @@ const updateCartProduct = asyncHandler(async (req, res) => {
     cart.items[itemIndex].bv = bvSelf * quantity;
 
     // Update total price, items quantity, and total BV
-    cart.total = cart.items.reduce((total, item) => total + parseFloat(item.price) * item.quantity, 0);
+    cart.total = cart.items.reduce((total, item) => total + parseFloat(item.offerPrice) * item.quantity, 0);
     cart.itemsQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
     cart.totalBV = cart.items.reduce((total, item) => total + (parseFloat(item.bv) || 0), 0);
 

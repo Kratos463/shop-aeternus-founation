@@ -78,7 +78,7 @@ const orderSchema = new Schema({
     items: [itemSchema],
     payment: {
         type: Schema.Types.ObjectId,
-        ref: 'Payment',
+        ref: 'payment',
         required: true
     },
     shippingAddress: {

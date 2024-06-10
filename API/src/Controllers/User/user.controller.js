@@ -5,6 +5,40 @@ const { ApiError } = require('../../utils/apiError.js')
 const { ApiResponse } = require('../../utils/apiResponse.js')
 const { serialize } = require("cookie")
 const jwt = require("jsonwebtoken")
+const { generateVerificationToken, sendVerificationEmail } = require("../../utils/sendEmailVerification.js")
+
+const verifyEmail = async (req, res) => {
+    try {
+        // Extract the verification token from the request parameters
+        const { token } = req.query;
+
+        // Find the user with the corresponding verification token
+        const user = await User.findOne({ emailVerificationToken: token });
+
+        // If no user found with the verification token, handle accordingly
+        if (!user) {
+            return res.status(404).json({ message: 'Invalid verification token' });
+        }
+
+        // If the user is already verified, handle accordingly
+        if (user.emailVerified) {
+            return res.status(400).json({ message: 'Email already verified' });
+        }
+
+        // Set the emailVerified flag to true and remove the verification token
+        user.emailVerified = true;
+        user.verificationToken = undefined;
+
+        // Save the updated user data
+        await user.save();
+
+        // Respond with a success message
+        return res.status(200).json({ message: 'Email verification successful' });
+    } catch (error) {
+        console.error('Error verifying email:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 // register user api endpoint
 const registerUser = asyncHandler(async (req, res) => {
@@ -13,6 +47,9 @@ const registerUser = asyncHandler(async (req, res) => {
     if ([firstName, phone, username, email, password].some(field => !field?.trim())) {
         throw new ApiError(400, "All fields are required");
     }
+
+    // Generate verification token
+    const verificationToken = await generateVerificationToken();
 
     // Ensure that email and username have indexes
     const existedUser = await User.findOne({
@@ -35,17 +72,24 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password, // Make sure password hashing is optimized
         newsletter,
-        mfvUser: isFromMetafortunaverse
+        mfvUser: isFromMetafortunaverse,
+        emailVerificationToken: verificationToken
     });
 
-    await user.save(); // Save the user
+    try {
+        await user.save(); // Save the user
+        await sendVerificationEmail(email, verificationToken);
 
-    const createdUser = await User.findById(user._id).select("-password").lean().exec();
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user");
+        const createdUser = await User.findById(user._id).select("-password").lean().exec();
+        if (!createdUser) {
+            throw new ApiError(500, "Something went wrong while registering the user");
+        }
+
+        return res.status(201).json(new ApiResponse(200, "User Created", "User registered Successfully"));
+    } catch (error) {
+        console.error('Error during user registration:', error);
+        throw new ApiError(500, "Internal Server Error");
     }
-
-    return res.status(201).json(new ApiResponse(200, "User Created", "User registered Successfully"));
 });
 
 // login user api endpoint
@@ -315,9 +359,9 @@ const updateAddress = asyncHandler(async (req, res) => {
         state: address.state,
         postalcode: address.postalcode,
         country: address.country,
-        alternativePhone: address.alternativePhone 
+        alternativePhone: address.alternativePhone
     };
-    
+
     await userAddress.save();
 
     return res.status(200).json(new ApiResponse(200, {}, "Address updated successfully"));
@@ -334,5 +378,6 @@ module.exports = {
     addAddress,
     deleteAddress,
     getAddress,
-    updateAddress
+    updateAddress,
+    verifyEmail
 }

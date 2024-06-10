@@ -52,7 +52,7 @@ const CartContainer = ({ icon }) => {
                     <h5>
                       subtotal :{" "}
                       <span>
-                        {selectedCurr.symbol} {convertPrice(cart.total, selectedCurr)}{" "}
+                        {selectedCurr.symbol} {cart.total}{" "}
                       </span>
                     </h5>
                   </div>

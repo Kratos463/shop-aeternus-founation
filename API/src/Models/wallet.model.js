@@ -11,7 +11,7 @@ const walletSchema = new Schema({
         required: true,
         default: 0
     }
-})
+}, {timestamps: true})
 
 const Wallet = model("wallet", walletSchema)
 

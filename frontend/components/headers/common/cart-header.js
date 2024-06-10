@@ -2,7 +2,6 @@ import React, { Fragment, useContext } from "react";
 import Link from "next/link";
 import CartContext from "../../../helpers/cart";
 import { Media } from "reactstrap";
-import { convertPrice } from "../../../helpers/utils";
 
 const CartHeader = ({ item, symbol}) => {
   
@@ -29,7 +28,7 @@ const CartHeader = ({ item, symbol}) => {
             <h4>
               <span>
                 {item.quantity} x {symbol.symbol}
-                {convertPrice(item.price, symbol)}
+                {item.offerPrice}
               </span>
             </h4>
 

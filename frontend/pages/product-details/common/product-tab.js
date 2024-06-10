@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Container, Row, Col, TabContent, TabPane, Nav, NavItem, NavLink } from "reactstrap";
-import RateAndReviewForm from "./review-form";
 import Review from "../../page/review";
 
 const ProductTab = ({ product, productReviews }) => {
@@ -31,7 +30,6 @@ const ProductTab = ({ product, productReviews }) => {
                   <p className="mb-0 pb-0" dangerouslySetInnerHTML={{ __html: (product?.Description) }}></p>
                 </TabPane>
                 <TabPane tabId="2">
-                  {/* <RateAndReviewForm /> */}
                   <Review productReviews={productReviews} />
                 </TabPane>
               </TabContent>

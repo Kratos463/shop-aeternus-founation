@@ -12,7 +12,7 @@ const LeftSidebar = () => {
   return (
     <CommonLayout parent="Home" title="Product">
       <NoSidebarPage pathId={id} />
-      <ProductSection pathId={id} />
+      {/* <ProductSection pathId={id} /> */}
     </CommonLayout>
   );
 }

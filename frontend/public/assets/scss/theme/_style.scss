@@ -3575,23 +3575,24 @@ del {
       margin-bottom: 5px;
       transition: all 0.5s ease;
 
-      span{
+      span {
         font-size: 16px;
         color: var(--theme-deafult)
       }
     }
 
-    .f-price{
+    .f-price {
       font-size: 18px;
       font-weight: 500;
       margin-bottom: 5px;
       color: $dark-font;
     }
 
-    .bv{
+    .bv {
       font-size: 14px;
       font-weight: bold;
-      span{
+
+      span {
         color: var(--theme-deafult)
       }
     }
@@ -10974,6 +10975,16 @@ footer {
         h2 {
           font-size: 24px;
           margin-bottom: 0;
+
+          del {
+            font-size: 18px;
+            color: $dark-font;
+          }
+
+          span {
+            font-size: 20px;
+            color: green
+          }
         }
 
         &:first-child {
@@ -11527,7 +11538,7 @@ footer {
     margin-bottom: 15px;
   }
 
-  .bv{
+  .bv {
     font-size: 16px;
     color: var(--theme-deafult);
     margin-bottom: 15px;
@@ -12162,6 +12173,25 @@ footer {
     }
   }
 
+  .balance-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background: green;
+    padding: 10px 5px;
+  }
+
+  .balance {
+    color: white;
+    font-size: 24px;
+    margin: 0;
+  }
+
+  .refresh-btn {
+    font-size: 14px;
+  }
+
   .checkout-form {
     .checkout-details {
       position: relative;
@@ -12339,6 +12369,16 @@ footer {
         font-weight: 400;
         width: 35%;
         float: right;
+      }
+
+      span {
+
+        span {
+          color: green;
+          font-weight: 600;
+          margin-left: 5px;
+        }
+
       }
     }
 

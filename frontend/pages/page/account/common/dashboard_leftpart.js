@@ -7,7 +7,7 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 
 const Dashboard_LeftPart = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [accountInfo, setAccountInfo] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 991);
 
@@ -54,7 +54,7 @@ const Dashboard_LeftPart = () => {
               <Link href="/page/account/address-book">Address Book</Link>
             </li>
             <li>
-              <Link href="#">My Orders</Link>
+              <Link href="/page/account/orders">My Orders</Link>
             </li>
             <li>
               <Link href="/page/account/cart">My Cart</Link>
@@ -65,6 +65,15 @@ const Dashboard_LeftPart = () => {
             <li>
               <Link href="/page/account/edit-profile">Edit Profile</Link>
             </li>
+            {
+              user?.mfvUser && (
+                <>
+                  <li>
+                    <Link href="/page/account/wallet">Wallet</Link>
+                  </li>
+                </>
+              )
+            }
             <li>
               <Link href="/page/account/vouchers">My Vouchers</Link>
             </li>

@@ -1,11 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Media, Container, Form, Row, Col, Button } from "reactstrap";
 import CartContext from "../../../../helpers/cart";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
-import { convertPrice, generate15DigitNumber, getConfig } from "../../../../helpers/utils";
+import { generate15DigitNumber, getConfig } from "../../../../helpers/utils";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../../helpers/auth/AuthContext";
 import { useVoucher } from "../../../../helpers/voucher/VoucherContext";
@@ -13,19 +12,18 @@ import axios from "axios";
 
 const CheckoutPage = () => {
     const cartContext = useContext(CartContext);
-    const { vouchers } = useVoucher();
-    const { addAddress, userAddress, user } = useAuth();
-    const cartItems = cartContext.state;
+    const { vouchers, getVouchers } = useVoucher();
+    const { addAddress, userAddress, user, wallet, getWalletDetails } = useAuth();
     const displayCartProduct = cartContext.displayCartProduct
     const cart = cartContext.cart;
     const { state: selectedCurr } = useContext(CurrencyContext);
     const [obj, setObj] = useState({});
-    const [payment, setPayment] = useState("cod");
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [newAddressFormVisible, setNewAddressFormVisible] = useState(false);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
+    const [discountedTotal, setDiscountedTotal] = useState(0);
 
     const {
         register,
@@ -33,9 +31,30 @@ const CheckoutPage = () => {
         formState: { errors },
     } = useForm();
 
-    const checkhandle = (value) => {
-        setPayment(value);
+
+    // Initialize discountedTotal when cart.total changes
+    useEffect(() => {
+        setDiscountedTotal(cart.total);
+    }, [cart.total]);
+
+
+    const handleVoucherChange = (voucher) => {
+        setSelectedVoucher(voucher);
+        if (voucher && voucher.cost) {
+            setDiscountedTotal(cart.total - voucher.cost);
+        } else {
+            setDiscountedTotal(cart.total);
+        }
+        if (voucher && user.mfvUser && voucher._id) {
+            // If MFV user and voucher selected, set totalBV to 0
+            cart.totalBV = 0;
+        } else {
+            // Recalculate totalBV if no voucher selected
+            cart.totalBV = cart.items.reduce((total, item) => total + (parseFloat(item.bv) || 0), 0);
+        }
     };
+
+
 
     const onSubmit = async (data) => {
         try {
@@ -62,24 +81,20 @@ const CheckoutPage = () => {
                 toast.error("Please select a shipping address.");
                 return;
             }
-    
-    
-            if (user.mfvUser && (!selectedVoucher || !selectedVoucher._id)) {
-                toast.error("Please select a voucher.");
-                return;
-            }
-    
+
+            const paymentMethod = user.mfvUser ? "Wallet" : "Crypto";
+
             // Make the payment
             const paymentResponse = await axios.post(
                 `${process.env.API_URL}/api/v1/payment/make-payment`,
                 {
-                    amount: cart.total,
-                    method: 'Wallet',
+                    amount: discountedTotal,
+                    method: paymentMethod,
                     transactionId: generate15DigitNumber()
                 },
                 getConfig()
             );
-    
+
             if (paymentResponse.data.success) {
                 // Make the order
                 const orderResponse = await axios.post(
@@ -91,13 +106,31 @@ const CheckoutPage = () => {
                     },
                     getConfig()
                 );
-    
+
                 if (orderResponse.data.success) {
-                    displayCartProduct()
+                    displayCartProduct();
+                    if (user.mfvUser) {
+                        getVouchers()
+                        getWalletDetails()
+                    }
                     toast.success("Order placed successfully!");
                     router.push('/page/order-success');
                 } else {
-                    toast.error("Failed to place order.");
+                    // If order fails after payment, initiate refund
+                    const refundResponse = await axios.post(
+                        `${process.env.API_URL}/api/v1/payment/refund`,
+                        {
+                            paymentId: paymentResponse.data.payment._id
+                        },
+                        getConfig()
+                    );
+
+                    if (refundResponse.data.success) {
+                        getWalletDetails()
+                        toast.error("Failed to place order. Refund initiated.");
+                    } else {
+                        toast.error("Failed to place order. Refund failed.");
+                    }
                 }
             } else {
                 toast.error("Payment failed.");
@@ -107,7 +140,6 @@ const CheckoutPage = () => {
             toast.error("Failed to place order.");
         }
     };
-    
 
 
     return (
@@ -115,6 +147,16 @@ const CheckoutPage = () => {
             <Container>
                 <div className="checkout-page">
                     <div className="checkout-form">
+                        <Row>
+                            <Col>
+                                <div className="balance-strip">
+                                    <p className="balance">Current Balance: {selectedCurr.symbol}{wallet?.amount}</p>
+                                    <Button className="refresh-btn" color="secondary" size="sm" onClick={() => getWalletDetails()}>Refresh</Button>
+                                </div>
+                            </Col>
+                        </Row>
+
+
                         <Form onSubmit={handleSubmit(onSubmit)}>
                             <Row>
                                 <Col lg="6" sm="12" xs="12" style={{ paddingLeft: '40px' }}>
@@ -301,6 +343,7 @@ const CheckoutPage = () => {
                                     {cart?.items?.length > 0 && (
                                         <div className="checkout-details">
                                             <div className="order-box">
+
                                                 <div className="title-box">
                                                     <div>
                                                         Product <span style={{ marginLeft: 'auto', paddingRight: '15px' }}>  <span> Total </span>  </span>
@@ -321,7 +364,7 @@ const CheckoutPage = () => {
                                                             </div>
                                                             <div style={{ whiteSpace: 'nowrap' }}>
                                                                 {selectedCurr.symbol}
-                                                                {(convertPrice(item.price, selectedCurr) * item.quantity).toFixed(2)}
+                                                                {(item.offerPrice * item.quantity).toFixed(2)}
                                                             </div>
                                                         </li>
                                                     ))}
@@ -332,134 +375,100 @@ const CheckoutPage = () => {
                                                         Subtotal{" "}
                                                         <span className="count" style={{ marginLeft: 'auto', paddingLeft: '110px' }}>
                                                             {selectedCurr.symbol}
-                                                            {convertPrice(cart.total, selectedCurr).toFixed(2)}
+                                                            {(cart.total).toFixed(2)}
                                                         </span>
                                                     </li>
                                                     <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                                        Shipping
-                                                        <div className="shipping" >
-                                                            <div className="shopping-option">
-                                                                <input type="checkbox" name="free-shipping" id="free-shipping" />
-                                                                <label htmlFor="free-shipping">Free Shipping</label>
-                                                            </div>
-                                                        </div>
+                                                        Shipping Fee
+                                                        <span className="count" style={{ marginLeft: 'auto', paddingLeft: '110px', display: "flex" }}>
+                                                            <del>
+                                                                {selectedCurr.symbol}
+                                                                50
+                                                            </del> <span>Free</span>
+                                                        </span>
                                                     </li>
-                                                </ul>
-                                                <ul className="coupon" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
-                                                    <li>
-                                                        <div className="coupon-input" style={{ display: 'flex', alignItems: 'center', }}>
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Enter coupon code"
-                                                                style={{ flex: 1, marginRight: '10px', width: '350px', height: '40px' }}
-                                                            />
-                                                            <button
-                                                                className="btn-solid btn"
-                                                                style={{ whiteSpace: 'nowrap', width: '100px', height: '40px' }}
-                                                            >
-                                                                Apply
-                                                            </button>
-                                                        </div>
 
+                                                    {
+                                                        user?.mfvUser && (
+                                                            <>
+                                                                <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                                    Total BV{" "}
+                                                                    <span className="count" style={{ marginLeft: 'auto', paddingLeft: '110px' }}>
+                                                                        {selectedCurr.symbol}
+                                                                        {(cart.totalBV).toFixed(2)}
+                                                                    </span>
+                                                                </li>
+                                                                <div className="payment-box">
+                                                                    <div className="upper-box">
+                                                                        <div className="payment-options">
+                                                                            <p style={{ color: "red", fontWeight: 700 }}>If you apply a coupon or voucher, your Business Volume getting 0</p>
+                                                                            <div className="form-group">
+                                                                                <div className="field-label">Select Voucher</div>
+                                                                                <select
+                                                                                    name="voucher"
+                                                                                    onChange={(e) => {
+                                                                                        const selectedVoucher = vouchers.find(voucher => voucher._id === e.target.value);
+                                                                                        handleVoucherChange(selectedVoucher);
+                                                                                    }}
+                                                                                >
+                                                                                    <option value="">Select Voucher</option>
+                                                                                    {vouchers.filter(voucher => !voucher.isUsed).map((voucher, index) => (
+                                                                                        <option key={index} value={voucher._id}>
+                                                                                            {voucher.code} - {selectedCurr.symbol}{voucher.cost}
+                                                                                        </option>
+                                                                                    ))}
+                                                                                </select>
 
-
-                                                        {user.mfvUser && (
-                                                            <div className="voucher-display" style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
-                                                                <h4 style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold', color: '#ff4c3b' }}>Available Vouchers</h4>
-                                                                {vouchers
-                                                                    .filter(voucher => !voucher.isUsed) // Filter out used vouchers
-                                                                    .map((voucher, index) => (
-                                                                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                                                                            <input
-                                                                                type="radio"
-                                                                                id={`voucher-${index}`}
-                                                                                name="voucher"
-                                                                                value={voucher.code}
-                                                                                onChange={() => setSelectedVoucher(voucher)}
-                                                                                style={{ marginRight: '10px' }}
-                                                                            />
-                                                                            <label htmlFor={`voucher-${index}`} style={{ fontWeight: 'bold' }}>{voucher.code}</label>
+                                                                            </div>
                                                                         </div>
-                                                                    ))}
-
-                                                            </div>
-                                                        )}
-
-
-                                                    </li>
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )
+                                                    }
                                                 </ul>
-                                                <ul className="total" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
+
+
+                                                <ul className="sub-total" style={{ listStyleType: 'none', padding: 0, marginTop: '20px' }}>
                                                     <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                         Total{" "}
-                                                        <span className="count">
+                                                        <span className="count" style={{ marginLeft: 'auto', paddingLeft: '110px' }}>
                                                             {selectedCurr.symbol}
-                                                            {convertPrice(cart.total, selectedCurr).toFixed(2)}
+                                                            {(discountedTotal).toFixed(2)}
                                                         </span>
                                                     </li>
                                                 </ul>
+
                                             </div>
                                             <div className="payment-box">
-                                                <div className="upper-box">
-                                                    {/* <div className="payment-options">
-                                                        <ul>
-                                                            <li>
-                                                                <div className="radio-option stripe">
-                                                                    <input type="radio" name="payment-group" id="payment-2" defaultChecked={true} onClick={() => checkhandle("cod")} />
-                                                                    <label htmlFor="payment-2">COD</label>
-                                                                </div>
-                                                            </li>
-                                                            <li>
-                                                                <div className="radio-option paypal">
-                                                                    <input type="radio" name="payment-group" id="payment-1" onClick={() => checkhandle("paypal")} />
-                                                                    <label htmlFor="payment-1">PayPal</label>
-                                                                </div>
-                                                            </li>
-                                                        </ul>
-                                                    </div> */}
-                                                </div>
                                                 {cart.total !== 0 && (
                                                     <div className="text-end">
-                                                        {payment === "cod" ? (
+                                                        {user.mfvUser && wallet?.amount < discountedTotal ? (
+                                                            <div>
+                                                                <p style={{ color: "red", fontWeight: 700, textAlign: "start" }}>Oops! Your wallet balance is insufficient to place this order. Please add funds to your wallet.</p>
+                                                                <button type="button" className="btn-solid btn" disabled>
+                                                                    Place Order
+                                                                </button>
+                                                            </div>
+                                                        ) : (
                                                             <button type="button" className="btn-solid btn" onClick={handlePlaceOrder}>
                                                                 Place Order
                                                             </button>
-                                                        ) : (
-                                                            <PayPalScriptProvider options={{ clientId: "test" }}>
-                                                                <PayPalButtons
-                                                                    createOrder={(data, actions) => {
-                                                                        return actions.order.create({
-                                                                            purchase_units: [
-                                                                                {
-                                                                                    amount: {
-                                                                                        value: convertPrice(cart.total, selectedCurr).toFixed(2),
-                                                                                    },
-                                                                                },
-                                                                            ],
-                                                                        });
-                                                                    }}
-                                                                    onApprove={(data, actions) => {
-                                                                        return actions.order.capture().then((details) => {
-                                                                            const name = details.payer.name.given_name;
-                                                                            alert(`Transaction completed by ${name}`);
-                                                                            handlePlaceOrder();
-                                                                        });
-                                                                    }}
-                                                                />
-                                                            </PayPalScriptProvider>
                                                         )}
                                                     </div>
                                                 )}
                                             </div>
+
                                         </div>
+
                                     )}
                                 </Col>
-
                             </Row>
                         </Form>
                     </div>
                 </div>
             </Container>
-        </section>
+        </section >
     );
 };
 

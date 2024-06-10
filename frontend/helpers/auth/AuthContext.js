@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [userAddress, setUserAddress] = useState([]);
   const [token, setToken] = useState(null);
+  const [wallet, setWallet] = useState({})
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -32,7 +33,12 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       getAddressDetails()
     }
+    if (user?.mfvUser === true) {
+      getWalletDetails()
+    }
   }, [user]);
+
+
 
   const fetchUserDetails = async () => {
     setLoading(true);
@@ -162,7 +168,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const editAddress = async (address) => {
-    console.log("edit address")
     try {
       const response = await axios.patch(`${process.env.API_URL}/api/v1/user/update-shipping-address`, { address }, getConfig());
 
@@ -180,12 +185,22 @@ export const AuthProvider = ({ children }) => {
 
   }
 
+  const getWalletDetails = async () => {
+    try {
+      const response = await axios.get(`${process.env.API_URL}/api/v1/wallet`, getConfig())
+      setWallet(response.data.data)
+    } catch (error) {
+      console.error("Error in updating address", error)
+    }
+  }
+
 
 
   return (
     <AuthContext.Provider value={{
       user, loading, login, logout, updateUserDetails, updateUserPassword,
-      userAddress, addAddress, removeAddress, editAddress
+      userAddress, addAddress, removeAddress, editAddress,
+      getWalletDetails, wallet, setWallet
     }}>
       {children}
     </AuthContext.Provider>

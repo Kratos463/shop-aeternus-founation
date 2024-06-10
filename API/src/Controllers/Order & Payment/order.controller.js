@@ -10,8 +10,8 @@ const { ApiError } = require("../../utils/apiError");
 
 const createOrder = async (req, res) => {
     try {
-        const { paymentId, voucherId, addressId } = req.body;
         const userId = req.user._id;
+        const { paymentId, voucherId, addressId } = req.body;
 
         // Check payment status
         const payment = await Payment.findById(paymentId);
@@ -25,11 +25,9 @@ const createOrder = async (req, res) => {
         const voucherDocs = await Voucher.find({ userId });
 
         // Search for the specific voucher within the voucher documents
-        const voucher = voucherDocs.find(voucherDoc => voucherDoc.vouchers.some(voucherObj => voucherObj._id.toString() === voucherId && !voucherObj.isUsed && voucherObj.expiresAt >= new Date()));
-
-        // If voucher not found or expired, return error
-        if (!voucher) {
-            return res.status(400).json({ error: 'Invalid or expired voucher code' });
+        let voucher = null;
+        if (voucherId) {
+            voucher = voucherDocs.find(voucherDoc => voucherDoc.vouchers.some(voucherObj => voucherObj._id.toString() === voucherId && !voucherObj.isUsed && voucherObj.expiresAt >= new Date()));
         }
 
         // Retrieve items from the user's cart
@@ -49,6 +47,12 @@ const createOrder = async (req, res) => {
         // Extract the specific address from the address array using addressId
         const shippingAddress = userAddress.address.find(address => address._id.toString() === addressId);
 
+        // Calculate totalBV based on whether a voucher is provided
+        let totalBV = cart.totalBV;
+        if (voucherId) {
+            totalBV = 0;
+        }
+
         // Create the order including cart items and valid shipping address
         const order = new Order({
             user: userId,
@@ -58,18 +62,20 @@ const createOrder = async (req, res) => {
             billNo: new mongoose.Types.ObjectId().toString(),
             totalPayAmount: payment.amount,
             totalAmount: cart.total,
-            totalBV: cart.totalBV,
-            voucher: voucherId,
+            totalBV: totalBV,
+            voucher: voucherId || null,
             status: 'Pending'
         });
 
         // Save the order to the database
         await order.save();
 
-        // Mark the voucher as used
-        const voucherObj = voucher.vouchers.find(voucherObj => voucherObj._id.toString() === voucherId);
-        voucherObj.isUsed = true;
-        await voucher.save();
+        // If a voucher is used, mark it as used
+        if (voucherId && voucher) {
+            const voucherObj = voucher.vouchers.find(voucherObj => voucherObj._id.toString() === voucherId);
+            voucherObj.isUsed = true;
+            await voucher.save();
+        }
 
         // Empty the user's cart
         await Cart.findOneAndUpdate(
@@ -90,6 +96,7 @@ const createOrder = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 const getOrderDetails = async (req, res) => {
     try {
@@ -304,5 +311,89 @@ const gettingBillDetailsForMFVUserByDate = asyncHandler(async (req, res) => {
     }
 });
 
+const getUserOrderDetails = async (req, res) => {
+    try {
+        // Assuming req.user._id contains the authenticated user's ID
+        const userId = req.user._id;
 
-module.exports = { createOrder, getOrderDetails, gettingBillDetailsForMFVUser, gettingBillDetailsForMFVUserByDate };
+        // Use aggregation to fetch orders with populated fields
+        const orders = await Order.aggregate([
+            {
+                $match: { user: userId }
+            },
+            {
+                $lookup: {
+                    from: "payments", // Assuming the name of the payments collection
+                    localField: "payment",
+                    foreignField: "_id",
+                    as: "paymentDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "addresses", // Assuming the name of the addresses collection
+                    let: { shippingAddressId: "$shippingAddress" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$userId", userId] },
+                                        { $in: ["$$shippingAddressId", ["$_id"]] }
+                                    ]
+                                }
+                            }
+                        },
+                        { $unwind: "$address" },
+                        {
+                            $match: {
+                                $expr: { $eq: ["$address._id", "$$shippingAddressId"] }
+                            }
+                        }
+                    ],
+                    as: "shippingAddressDetails"
+                }
+            },
+            {
+                $unwind: { path: "$voucher", preserveNullAndEmptyArrays: true } // Unwind the voucher array
+            },
+            {
+                $lookup: {
+                    from: "vouchers", // Assuming the name of the vouchers collection
+                    localField: "voucher",
+                    foreignField: "_id",
+                    as: "voucherDetails"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    items: 1,
+                    totalAmount: 1,
+                    totalPayAmount: 1,
+                    totalBV: 1,
+                    status: 1,
+                    createdAt: 1,
+                    paymentDetails: { $arrayElemAt: ["$paymentDetails", 0] },
+                    shippingAddressDetails: { $arrayElemAt: ["$shippingAddressDetails", 0] },
+                    voucherDetails: { $arrayElemAt: ["$voucherDetails", 0] }
+                }
+            }
+        ]);
+
+        // If no orders found, return a 404 status
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found for this user.' });
+        }
+
+        // Respond with the orders
+        res.status(200).json(orders);
+    } catch (error) {
+        // Log the error and respond with a 500 status for server errors
+        console.error(error);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
+
+module.exports = { getUserOrderDetails, createOrder, getOrderDetails, gettingBillDetailsForMFVUser, gettingBillDetailsForMFVUserByDate };

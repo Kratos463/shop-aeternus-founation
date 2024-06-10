@@ -1,7 +1,7 @@
 // Function to convert INR price to the selected currency and round it up to the nearest whole number
 export const convertPrice = (price, selectedCurr) => {
   let convertedPrice = price / selectedCurr?.value;
-  convertedPrice = Math.ceil(convertedPrice) + 1;
+  convertedPrice = Math.ceil(convertedPrice);
   return convertedPrice;
 };
 
@@ -44,6 +44,14 @@ export function formatCustomTimestamp(isoTimestamp) {
 
   return formattedDate;
 }
+
+export const extractDateFromISO = (isoString) => {
+  const date = new Date(isoString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export function calculateBusinessVolume(priceStr) {
   // Convert the string to a number

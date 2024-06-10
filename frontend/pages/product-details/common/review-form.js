@@ -16,7 +16,6 @@ const RateAndReviewForm = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        // Add your form submission logic here
         
     };
 

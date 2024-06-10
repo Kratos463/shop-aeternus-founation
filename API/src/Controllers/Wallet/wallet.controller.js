@@ -26,6 +26,11 @@ const addAmountToWallet = asyncHandler(async (req, res) => {
             throw new ApiError(404, "User not found");
         }
 
+        // Check if the user is an MFV user
+        if (!user.mfvUser===true) {
+            throw new ApiError(400, "User is not an MFV user");
+        }
+
         let wallet = await Wallet.findOne({ user: user._id });
 
         if (wallet) {
@@ -79,7 +84,7 @@ const fetchWallet = asyncHandler(async (req, res) => {
         }
 
         // Check if the user is an MFV user
-        if (!user.mfvUser) {
+        if (!user.mfvUser===true) {
             throw new ApiError(400, "User is not an MFV user");
         }
 
@@ -98,6 +103,7 @@ const fetchWallet = asyncHandler(async (req, res) => {
             data: {
                 amount: wallet.amount,
                 transactions: transactions.map(transaction => ({
+                    id: transaction._id,
                     amount: transaction.amount,
                     type: transaction.type,
                     createdAt: transaction.createdAt
