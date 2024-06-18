@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema({
     username: {
       type: String,
       required: [true, "Please provide a username"],
-      unique: true,
       trim: true,
       index: true
     },
@@ -28,10 +27,12 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: [true, "Please  provide a phone number"],
+        unique: true
     },
     password: {
         type: String,
-        required: [true, "Please provide a password"]
+        required: [true, "Please provide a password"],
+        index: true
     },
     newsletter: {
         type: Boolean,
@@ -45,7 +46,7 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    emailVerificationToken: String
+    emailVerificationToken: {type: String, index: true}
 
 }, { timestamps: true })
 

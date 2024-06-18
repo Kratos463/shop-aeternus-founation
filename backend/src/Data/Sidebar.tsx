@@ -51,7 +51,7 @@ export const MENUITEMS: any = [
     ],
   },
   {
-    title: "Coupons",
+    title: "Discount Coupons",
     icon: Tag,
     type: "sub",
     active: false,

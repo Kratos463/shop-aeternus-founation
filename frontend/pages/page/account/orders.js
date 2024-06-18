@@ -1,77 +1,111 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, CardBody, ListGroup, ListGroupItem } from 'reactstrap';
 import CommonLayout from '../../../components/shop/common-layout';
 import Dashboard_LeftPart from './common/dashboard_leftpart';
+import axios from 'axios';
+import { formatCustomTimestamp, getConfig } from '../../../helpers/utils';
+import { useAuth } from '../../../helpers/auth/AuthContext';
+import Link from 'next/link';
 
 const OrderItem = ({ item }) => (
-    <ListGroupItem className="d-flex align-items-center">
-        <img src={item.image} alt={item.name} className="img-thumbnail" style={{ width: '60px', height: '60px', marginRight: '15px' }} />
-        <div>
-            <h6>{item.name}</h6>
-            <p>${item.price} - Qty: {item.quantity}</p>
-        </div>
-    </ListGroupItem>
+
+    <Link href={`/product-details/` + item.productId}>
+        <ListGroupItem className="d-flex align-items-center">
+            <img
+                src={"https://thebrandtadka.com/images_inventory_products/front_images/" + item.mediumFile}
+                alt={item.title} className="img-thumbnail" style={{ width: '60px', height: '60px', marginRight: '15px' }} />
+            <div>
+                <h6>{item.title}</h6>
+                <p>${item.offerPrice} - Qty: {item.quantity}</p>
+            </div>
+        </ListGroupItem>
+    </Link>
 );
 
 const OrderCard = ({ order }) => {
+
+    const formatShippingAddress = () => {
+        const { firstName, lastName, email, phone, houseNo, street, landmark, city, state, postalcode, country } = order.shippingAddressDetails;
+        return (
+            <>
+                <p>{firstName} {lastName}
+                    <br />
+                    {email}
+                    <br />
+                    {phone}
+                </p>
+                <p >{houseNo}, {street}, {landmark && landmark + ','} {city}, {state}, {country} - {postalcode}</p>
+            </>
+        );
+    };
+
     return (
         <Card className="mb-4">
             <CardBody>
-                <h5 className="card-title">Order #{order.id}</h5>
+                <h5 className="card-title">Order ID: {order.orderId}</h5>
                 <p className="card-text">Status: {order.status}</p>
-                <p className="card-text">Total: ${order.total}</p>
-                <ListGroup flush>
+                <p className="card-text">Total: ${order.totalPayAmount}</p>
+
+                {/* Order Items */}
+                <ListGroup flush className="mt-3">
                     {order.items.map(item => (
-                        <OrderItem key={item.id} item={item} />
+                        <OrderItem key={item._id} item={item} />
                     ))}
                 </ListGroup>
-                <div className="mt-3">
-                    <p className="mb-1"><strong>Order ID:</strong> {order.id}</p>
-                    <p className="mb-1"><strong>Status:</strong> {order.status}</p>
-                    <p className="mb-1"><strong>Total Amount:</strong> ${order.total}</p>
-                    <p className="mb-1"><strong>Order Date:</strong> {order.date}</p>
-                    <p className="mb-1"><strong>Shipping Address:</strong> {order.shippingAddress}</p>
+
+                <Row>
+                    <Col sm="12" md="6" className="payment-details mt-3">
+                        <h6>Payment Details</h6>
+                        <p><strong>Transaction ID:</strong> {order?.paymentDetails?.transactionId}</p>
+                        <p><strong>Status:</strong> {order.paymentDetails?.status}</p>
+                        <p><strong>Total Amount:</strong> ${order.paymentDetails?.amount}</p>
+                        <p><strong>Transaction Date:</strong> {formatCustomTimestamp(order.paymentDetails?.createdAt)}</p>
+                    </Col>
+                    <Col sm="12" md="6" className="shipping-details mt-3">
+                        <h6>Shipping Address</h6>
+                        {formatShippingAddress()}
+                    </Col>
+                </Row>
+
+                {/* Download Invoice Button (Bottom Left Corner) */}
+                <div className="text-left mt-3">
+                    <button className="btn btn-primary">Download Invoice</button>
                 </div>
             </CardBody>
         </Card>
     );
 };
 
+
+const NoOrdersMessage = () => (
+    <div className="text-center mt-5">
+        <h3>No orders found</h3>
+        <p>Start shopping to see your orders here!</p>
+    </div>
+);
+
 const OrderPage = () => {
-    // Dummy order data for demonstration
-    const orders = [
-        {
-            id: 1,
-            status: 'Processing',
-            total: 50,
-            date: '2024-05-01',
-            shippingAddress: '123 Main St, Springfield',
-            items: [
-                { id: 1, name: 'Product 1', price: 10, quantity: 2, image: 'https://via.placeholder.com/60' },
-                { id: 2, name: 'Product 2', price: 15, quantity: 1, image: 'https://via.placeholder.com/60' }
-            ]
-        },
-        {
-            id: 2,
-            status: 'Shipped',
-            total: 70,
-            date: '2024-05-02',
-            shippingAddress: '456 Elm St, Springfield',
-            items: [
-                { id: 3, name: 'Product 3', price: 20, quantity: 1, image: 'https://via.placeholder.com/60' }
-            ]
-        },
-        {
-            id: 3,
-            status: 'Delivered',
-            total: 90,
-            date: '2024-05-03',
-            shippingAddress: '789 Oak St, Springfield',
-            items: [
-                { id: 4, name: 'Product 4', price: 30, quantity: 2, image: 'https://via.placeholder.com/60' }
-            ]
-        },
-    ];
+
+    const { user } = useAuth()
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const response = await axios.get(`${process.env.API_URL}/api/v1/order/get-orders`, getConfig());
+                console.log("Orders response", response)
+                setOrders(response.data);
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (user) {
+            fetchOrders();
+        }
+    }, [user]);
 
     return (
         <CommonLayout parent="home" title="profile">
@@ -86,9 +120,21 @@ const OrderPage = () => {
                                 <div className='dashboard'>
                                     <Col sm="12">
                                         <h3>My Orders</h3>
-                                        {orders.map(order => (
-                                            <OrderCard key={order.id} order={order} />
-                                        ))}
+                                        {loading ? (
+                                            <div className="text-center mt-5">
+                                                <i className="fa fa-spinner fa-spin fa-3x"></i>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {orders?.length > 0 ? (
+                                                    orders.map(order => (
+                                                        <OrderCard key={order._id} order={order} />
+                                                    ))
+                                                ) : (
+                                                    <NoOrdersMessage />
+                                                )}
+                                            </>
+                                        )}
                                     </Col>
                                 </div>
                             </div>

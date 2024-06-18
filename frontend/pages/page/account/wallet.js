@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Container, Row, Col, Table, Button } from 'reactstrap';
 import CommonLayout from '../../../components/shop/common-layout';
 import Dashboard_LeftPart from './common/dashboard_leftpart';
 import { useAuth } from '../../../helpers/auth/AuthContext';
-import {  extractDateFromISO } from '../../../helpers/utils';
+import { extractDateFromISO } from '../../../helpers/utils';
 import { CurrencyContext } from '../../../helpers/Currency/CurrencyContext';
 import ReactPaginate from 'react-paginate';
 
@@ -53,7 +53,11 @@ const WalletPage = () => {
                                 <div className='dashboard'>
                                     <Col sm="12">
                                         <div className="balance-strip">
-                                            <p className="balance">Current Balance: {selectedCurr.symbol}{wallet.amount}</p>
+                                            <p className="balance">
+                                                Current Balance: {selectedCurr.symbol}
+                                                {(wallet && wallet.amount !== undefined && wallet.amount !== 0) ? wallet.amount.toFixed(2) : "0.00"}
+                                            </p>
+
                                             <Button className="refresh-btn" color="secondary" size="sm" onClick={() => getWalletDetails()}>Refresh</Button>
                                         </div>
                                         <div className="filter">

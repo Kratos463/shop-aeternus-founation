@@ -43,7 +43,7 @@ const Review = ({ productReviews }) => {
               {productReviews.map((review) => (
                 <MasterReview
                   key={review._id}
-                  name={review.userId.username}
+                  name={review.userId?.username}
                   rate={review.rating}
                   datetime={formatCustomTimestamp(review.createdAt)}
                   review={review.reviewText}

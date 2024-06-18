@@ -6,10 +6,9 @@ import { useAuth } from "../../../helpers/auth/AuthContext";
 
 const TopBarDark = ({ topClass, fluid }) => {
 
-  const { user, logout,token } = useAuth()
-  // console.log("token details:", JSON.stringify(token, null, 2));
+  const { user, logout, wallet } = useAuth()
 
-  
+
 
   return (
     <div className={topClass}>
@@ -27,37 +26,41 @@ const TopBarDark = ({ topClass, fluid }) => {
             </div>
           </Col>
           <Col lg="6" className="text-end">
-            <ul   className="header-dropdown">
+            <ul className="header-dropdown">
+              {
+                user && user.mfvUser && (
+                  <li className="mobile-wishlist">
+  
+                     E-Wallet Balance: ${(wallet && wallet.amount !== undefined && wallet.amount !== 0) ? wallet.amount.toFixed(2) : "0.00"}
+                  </li>
+                )
+              }
               <li className="mobile-wishlist">
                 <Link href="/page/account/wishlist">
                   <i className="fa fa-heart" aria-hidden="true"></i> wishlist
                 </Link>
               </li>
-              <li   className="onhover-dropdown mobile-account">
-             
-                <i style={{}} className="fa fa-user" aria-hidden="true"></i> 
+              <li className="onhover-dropdown mobile-account">
+
+                <i style={{}} className="fa fa-user" aria-hidden="true"></i>
                 {
-                  user ? user ?.firstName  : "My Account"
-                  
-                } 
-                   {/* <span className="dropdown-arrow"></span> */}
+                  user ? user?.firstName : "My Account"
 
+                }
 
-                      <span className="dropdown-arrow">&#x25BC;</span>
-
-                <ul  className="onhover-show-div">
+                <ul className="onhover-show-div">
                   {user ? (
                     <>
-                    <li>
-                      <Link href={`/page/account/dashboard`}>
-                        Profile
-                      </Link>
-                    </li>
-                    <li onClick={logout}>
-                      <Link href="#">
-                        Logout
-                      </Link>
-                    </li>
+                      <li>
+                        <Link href={`/page/account/dashboard`}>
+                          Profile
+                        </Link>
+                      </li>
+                      <li onClick={logout}>
+                        <Link href="#">
+                          Logout
+                        </Link>
+                      </li>
                     </>
                   ) : (
                     <>

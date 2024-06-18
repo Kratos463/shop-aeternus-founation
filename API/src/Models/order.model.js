@@ -65,6 +65,9 @@ const itemSchema = new Schema({
     price: {
         type: String,
         required: true
+    },
+    offerPrice: {
+        type: Number
     }
 }, { _id: false });
 
@@ -85,6 +88,10 @@ const orderSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'address',
         required: true
+    },
+    orderId: {
+        type: String,
+        index: true
     },
     billNo: {
         type: String,

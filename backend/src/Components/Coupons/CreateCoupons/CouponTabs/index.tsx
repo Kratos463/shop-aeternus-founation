@@ -27,9 +27,6 @@ const CouponTabs = () => {
           <UsageForm />
         </TabPanel>
       </Tabs>
-      <div className="pull-right">
-        <Button>Save</Button>
-      </div>
     </Fragment>
   );
 };

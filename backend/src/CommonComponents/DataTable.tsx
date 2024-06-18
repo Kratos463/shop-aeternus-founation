@@ -6,10 +6,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { Button, Form, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from "reactstrap";
 const DataTable = dynamic(() => import("react-data-table-component"), { ssr: false });
 
-const Datatable = ({ myData, myClass, multiSelectOption, pagination }: any) => {
+const Datatable = ({ myData, myClass, multiSelectOption, pagination, fieldsToShow }: any) => {
   const [open, setOpen] = useState(false);
   const [checkedValues, setCheckedValues] = useState([]);
   const [data, setData] = useState(myData);
+  
   const selectRow = (e, i) => {
     if (!e.target.checked) {
       setCheckedValues(checkedValues.filter((item, j) => i !== item));
@@ -35,7 +36,7 @@ const Datatable = ({ myData, myClass, multiSelectOption, pagination }: any) => {
         suppressContentEditableWarning
         onBlur={(e) => {
           data[cellInfo.index][cellInfo.index.id] = e.target.innerHTML;
-          setData({ myData: data });
+          setData([...data]); // Update state correctly
         }}
         dangerouslySetInnerHTML={{
           __html: myData[cellInfo.index][cellInfo.index.id],
@@ -49,9 +50,10 @@ const Datatable = ({ myData, myClass, multiSelectOption, pagination }: any) => {
       const del = data;
       del.splice(index, 1);
       setData([...del]);
+      toast.success("Successfully Deleted !");
     }
-    toast.success("Successfully Deleted !");
   };
+
   const onOpenModal = () => {
     setOpen(true);
   };
@@ -64,66 +66,26 @@ const Datatable = ({ myData, myClass, multiSelectOption, pagination }: any) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  const columns = [];
-  for (const key in myData[0]) {
-    let editable = renderEditable;
-    if (key === "image") {
-      editable = null;
-    }
-    if (key === "status") {
-      editable = null;
-    }
-    if (key === "avtar") {
-      editable = null;
-    }
-    if (key === "vendor") {
-      editable = null;
-    }
-    if (key === "order_status") {
-      editable = null;
-    }
+  // Generate columns based on fieldsToShow
+  const columns = fieldsToShow?.map((key) => ({
+    name: <b>{Capitalize(key)}</b>,
+    header: <b>{Capitalize(key)}</b>,
+    selector: (row) => {
+      // Check if the value is boolean and return appropriate string or icon
+      const value = row[key];
+      if (typeof value === 'boolean') {
+        return value ? "Yes" : "No";
+      }
+      return value;
+    },
+    style: {
+      textAlign: "center",
+    },
+  }));
 
-    columns.push({
-      name: <b>{Capitalize(key.toString())}</b>,
-      header: <b>{Capitalize(key.toString())}</b>,
-      selector: (row) => row[key],
-      Cell: editable,
-      style: {
-        textAlign: "center",
-      },
-    });
-  }
-
-  if (multiSelectOption === true) {
-    columns.push({
-      name: (
-        <Button
-          color="danger"
-          size="sm"
-          className=" btn-delete mb-0 b-r-4"
-          onClick={(e) => {
-            if (window.confirm("Are you sure you wish to delete this item?")) handleRemoveRow();
-          }}
-        >
-          Delete
-        </Button>
-      ),
-      id: "delete",
-      accessor: () => "delete",
-      cell: (row) => (
-        <div>
-          <span>
-            <Input type="checkbox" name={row.id} defaultChecked={checkedValues.includes(row.id)} onChange={(e) => selectRow(e, row.id)} />
-          </span>
-        </div>
-      ),
-      style: {
-        textAlign: "center",
-      },
-      sortable: false,
-    });
-  } else {
-    columns.push({
+  // Add action column if not using multiSelectOption
+  if (!multiSelectOption) {
+    columns?.push({
       name: <b>Action</b>,
       id: "delete",
       accessor: (str) => "delete",
@@ -194,6 +156,7 @@ const Datatable = ({ myData, myClass, multiSelectOption, pagination }: any) => {
       sortable: false,
     });
   }
+
   return (
     <div>
       <Fragment>

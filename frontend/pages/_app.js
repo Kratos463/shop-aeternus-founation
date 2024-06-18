@@ -12,6 +12,7 @@ import Helmet from "react-helmet";
 import { ProductsProvider } from "../helpers/product/ProductContext";
 import CategoryProvider from "../helpers/category/CategoryProvider";
 import '../public/assets/style/categorymenu.css'
+import '../public/assets/style/style.css'
 import { AuthProvider } from "../helpers/auth/AuthContext";
 import VoucherProvider from "../helpers/voucher/VoucherContext";
 

@@ -66,7 +66,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
 
         // Create token data
         const token = jwt.sign(
-            { id: admin._id, email: admin.email },
+            { id: admin._id, email: admin.email }, 
             process.env.TOKEN_SECRET,
             { expiresIn: '1d' }
         );

@@ -19,8 +19,10 @@ const MasterProductDetail = ({
   const { user } = useAuth();
   const { state: selectedCurr } = useContext(CurrencyContext);
   const [discount, setDiscount] = useState(null);
-  const offerPrice = discount ? Math.floor((product.Price - (product.Price * discount / 100)) / 100) * 100 : product.Price;
-  const productPrice = convertPrice(offerPrice, selectedCurr);
+  const productPrice = parseFloat(product.Price);
+  const offerPrice = discount ? parseFloat((productPrice - (productPrice * discount / 100)).toFixed(2)) : productPrice.toFixed(2);
+  const convertedOfferPrice = parseFloat(convertPrice(offerPrice, selectedCurr).toFixed(2));
+  const businessVolume = calculateBusinessVolume(convertedOfferPrice).toFixed(2);
 
   useEffect(() => {
     async function fetchDiscount() {
@@ -45,17 +47,16 @@ const MasterProductDetail = ({
         )}
         <h6>{truncateTitle(product?.Title, 22)}</h6>
         <h4>
-          <del>{selectedCurr.symbol}
-            {convertPrice(parseInt(product.Price), selectedCurr)}.00
-          </del>
-          <span>{discount}% off</span>
+          <del>MRP {selectedCurr.symbol}
+            {convertPrice(productPrice, selectedCurr).toFixed(2)}
+          </del> <span>{discount}% off</span>
         </h4>
         <h3 className="f-price">
-          Offer Price: {selectedCurr.symbol} {convertPrice(offerPrice, selectedCurr)}.00
+          Offer Price: {selectedCurr.symbol}{convertedOfferPrice}
         </h3>
         {user?.mfvUser && (
           <h3 className="bv">
-            BV: <span>{selectedCurr.symbol}{calculateBusinessVolume(productPrice).toFixed(2)}</span>
+            BV: <span>{selectedCurr.symbol}{businessVolume}</span>
           </h3>
         )}
       </div>

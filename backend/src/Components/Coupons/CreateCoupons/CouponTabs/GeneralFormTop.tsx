@@ -1,18 +1,46 @@
 import { useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { Col, FormGroup, Input, Label, Row } from "reactstrap";
+import { Button, Col, FormGroup, Input, Label, Row, Spinner } from "reactstrap";
+import { useAppDispatch } from "@/Redux/Hooks";
+import { createDiscount } from "@/Redux/discount";
 
 const GeneFormTop = () => {
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const dispatch = useAppDispatch();
 
-  const handleStartDate = (date: Date) => {
-    setStartDate(date);
+  const [formValues, setFormValues] = useState({
+    startingPrice: 0,
+    endingPrice: 0,
+    discountPercentage: 0,
+  });
+  const [isLoading, setIsLoading] = useState(false); // State to manage loading state
+
+  const handleInputChange = (e:any) => {
+    setFormValues({
+      ...formValues,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleEndDate = (date: Date) => {
-    setEndDate(date);
+  const handleCreateDiscount = async () => {
+    setIsLoading(true); // Set loading state to true
+    try {
+      await dispatch(
+        createDiscount({
+          startingPrice: formValues.startingPrice,
+          endingPrice: formValues.endingPrice,
+          discountPercentage: formValues.discountPercentage,
+        })
+      );
+      // Reset form after successful creation
+      setFormValues({
+        startingPrice: 0,
+        endingPrice: 0,
+        discountPercentage: 0,
+      });
+    } catch (error) {
+      console.error("Failed to create discount:", error);
+    } finally {
+      setIsLoading(false); // Reset loading state
+    }
   };
 
   return (
@@ -20,44 +48,58 @@ const GeneFormTop = () => {
       <FormGroup>
         <Row>
           <Col xl="3" md="4">
-            <Label>* Name</Label>
+            <Label>* Starting Price</Label>
           </Col>
           <Col md="7">
-            <Input id="validationCustom0" type="text" required />
+            <Input
+              type="number"
+              name="startingPrice"
+              value={formValues.startingPrice}
+              onChange={handleInputChange}
+              required
+            />
           </Col>
         </Row>
       </FormGroup>
       <FormGroup>
         <Row>
           <Col xl="3" md="4">
-            <Label>* Code</Label>
+            <Label>* Ending Price</Label>
           </Col>
           <Col md="7">
-            <Input id="validationCustom1" type="text" required />
+            <Input
+              type="number"
+              name="endingPrice"
+              value={formValues.endingPrice}
+              onChange={handleInputChange}
+              required
+            />
           </Col>
-          <div className="valid-feedback">Please Provide a Valid Coupon Code.</div>
         </Row>
       </FormGroup>
       <FormGroup>
         <Row>
           <Col xl="3" md="4">
-            <Label>Start Date</Label>
+            <Label>* Discount Percentage</Label>
           </Col>
           <Col md="7">
-            <DatePicker selected={startDate} onChange={handleStartDate} />
+            <Input
+              type="number"
+              name="discountPercentage"
+              value={formValues.discountPercentage}
+              onChange={handleInputChange}
+              required
+            />
           </Col>
         </Row>
       </FormGroup>
-      <FormGroup>
-        <Row>
-          <Col xl="3" md="4">
-            <Label>End Date</Label>
-          </Col>
-          <Col md="7">
-            <DatePicker selected={endDate} onChange={handleEndDate} />
-          </Col>
-        </Row>
-      </FormGroup>
+      <Button className="pull-right" onClick={handleCreateDiscount}>
+        {isLoading ? (
+          <Spinner size="sm" color="light" /> // Show spinner while saving
+        ) : (
+          "Save"
+        )}
+      </Button>
     </>
   );
 };

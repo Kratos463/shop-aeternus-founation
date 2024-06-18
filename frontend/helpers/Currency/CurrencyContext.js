@@ -6,7 +6,7 @@ export const Provider = (props) => {
   const [selectedCurr, selectedCurrency] = useState({
     currency: "USD",
     symbol: "$",
-    value: 83.33,
+    value: 84,
   });
 
   const currencyContext = {

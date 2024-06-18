@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../../../helpers/auth/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -34,7 +34,7 @@ const Dashboard_LeftPart = () => {
     <div>
       {isMobile && (
         <div className="account-sidebar" onClick={toggleAccountInfo}>
-          <a className="popup-btn">my account <FontAwesomeIcon icon={faChevronDown} /></a>
+          <FontAwesomeIcon icon={faBars} />
         </div>
       )}
       <div className="dashboard-left" style={accountInfo ? { left: '0px' } : {}}>

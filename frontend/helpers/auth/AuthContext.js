@@ -70,23 +70,34 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     setLoading(true);
     try {
-
       const response = await axios.post(`${process.env.API_URL}/api/v1/user/login`, { identifier, password }, getConfig());
 
       if (response.data.success) {
-        const token = response.data.token;
+        const { token, emailVerified } = response.data;
+
+        if (!emailVerified) {
+          // Redirect to verify-email page
+          router.push('/page/verify-email');
+          return; // Stop further execution
+        }
+
+        // Proceed with login
         localStorage.setItem('token', token);
         setToken(token);
         fetchUserDetails();
         router.push("/");
         toast.success("Login successful");
+      } else {
+        // Display the error message received from the backend
+        toast.error(response.data.message || "Invalid email or password");
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || "Invalid email or password");
+      toast.error("Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
+
 
   const logout = async () => {
     try {

@@ -1,7 +1,6 @@
 import { Href, ImagePath } from "@/Constants";
 import { useAppDispatch, useAppSelector } from "@/Redux/Hooks";
 import { setOpenCloseSidebar, setRightSidebar } from "@/Redux/LayoutReducer";
-import Image from "next/image";
 import { Fragment, useState } from "react";
 import { AlignLeft, Bell, Maximize2, MessageSquare, MoreHorizontal } from "react-feather";
 import { Badge, Col, Row } from "reactstrap";
@@ -38,7 +37,7 @@ const Header = () => {
           <div className="main-header-left d-lg-none col-auto">
             <div className="logo-wrapper">
               <a href={Href}>
-                <img  className="blur-up lazyloaded" src={`${ImagePath}/dashboard/multikart-logo-black.png`} alt="" />
+                <img  className="blur-up lazyloaded" src={`${ImagePath}/dashboard/logo.jpg`} alt="" />
               </a>
             </div>
           </div>

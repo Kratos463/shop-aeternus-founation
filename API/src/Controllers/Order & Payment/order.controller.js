@@ -7,6 +7,20 @@ const User = require("../../Models/user.model");
 const mongoose = require("mongoose");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { ApiError } = require("../../utils/apiError");
+const { ObjectId } = require('mongoose').Types;
+
+const generateOrderID = () => {
+    const prefix = "SAO";
+    const uniqueID = Math.floor(10000000 + Math.random() * 90000000); // Generate 8 random digits
+    return `${prefix}${uniqueID}`;
+};
+
+// Function to generate unique bill number
+const generateBillNo = () => {
+    const prefix = "SAB";
+    const uniqueID = Math.floor(10000000 + Math.random() * 90000000); // Generate 8 random digits
+    return `${prefix}${uniqueID}`;
+};
 
 const createOrder = async (req, res) => {
     try {
@@ -18,7 +32,7 @@ const createOrder = async (req, res) => {
 
         // If payment is not found or status is not successful, return error
         if (!payment || payment.status !== 'Completed') {
-            return res.status(400).json({ error: 'Invalid or unsuccessful payment' });
+            return res.status(400).json({ error: 'Invalid or unsuccessful payment', success: false });
         }
 
         // Find vouchers associated with the user's _id
@@ -33,7 +47,7 @@ const createOrder = async (req, res) => {
         // Retrieve items from the user's cart
         const cart = await Cart.findOne({ userId });
         if (!cart) {
-            return res.status(400).json({ error: 'Cart Not Found' });
+            return res.status(400).json({ error: 'Cart Not Found', success: false });
         }
 
         // Retrieve the shipping address using the provided addressId
@@ -41,7 +55,7 @@ const createOrder = async (req, res) => {
 
         // Check if the address exists and belongs to the user
         if (!userAddress) {
-            return res.status(400).json({ error: 'Invalid shipping address' });
+            return res.status(400).json({ error: 'Invalid shipping address', success: false });
         }
 
         // Extract the specific address from the address array using addressId
@@ -58,8 +72,9 @@ const createOrder = async (req, res) => {
             user: userId,
             items: cart.items,
             payment: paymentId,
-            shippingAddress: shippingAddress._id, // Set the shipping address ID
-            billNo: new mongoose.Types.ObjectId().toString(),
+            shippingAddress: shippingAddress._id,
+            orderId: generateOrderID(),
+            billNo: generateBillNo(),
             totalPayAmount: payment.amount,
             totalAmount: cart.total,
             totalBV: totalBV,
@@ -80,20 +95,20 @@ const createOrder = async (req, res) => {
         // Empty the user's cart
         await Cart.findOneAndUpdate(
             { userId },
-            { 
-                $set: { 
+            {
+                $set: {
                     items: [],
                     total: 0,
                     totalBV: 0,
                     itemsQuantity: 0
-                } 
+                }
             }
         );
 
-        res.status(201).json({ success: true, message: "Order successfully placed and cart emptied" });
+        res.status(201).json({ success: true, message: "Order successfully placed and cart emptied", _id: order._id });
     } catch (error) {
         console.error('Error creating order:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', success: false });
     }
 };
 
@@ -136,7 +151,7 @@ const getOrderDetails = async (req, res) => {
                     as: 'voucherDetails'
                 }
             },
-            { 
+            {
                 $addFields: {
                     shippingAddressId: { $toObjectId: '$shippingAddress' } // Convert shippingAddress to ObjectId
                 }
@@ -160,7 +175,7 @@ const getOrderDetails = async (req, res) => {
         // Extract specific fields from userDetails and paymentDetails
         const userDetails = orderDetails[0].userDetails[0];
         const paymentDetails = orderDetails[0].paymentDetails[0];
-        
+
         // Extract specific fields from voucherDetails
         const voucherDetails = orderDetails[0].voucherDetails ? {
             _id: orderDetails[0].voucherDetails._id,
@@ -197,7 +212,7 @@ const gettingBillDetailsForMFVUser = asyncHandler(async (req, res) => {
         // Find the user's voucher document
         const userVoucherDoc = await Voucher.findOne({ userId: user._id });
 
-        if(!userVoucherDoc){
+        if (!userVoucherDoc) {
             throw new ApiError(400, "No voucher found")
         }
 
@@ -313,17 +328,15 @@ const gettingBillDetailsForMFVUserByDate = asyncHandler(async (req, res) => {
 
 const getUserOrderDetails = async (req, res) => {
     try {
-        // Assuming req.user._id contains the authenticated user's ID
         const userId = req.user._id;
 
-        // Use aggregation to fetch orders with populated fields
         const orders = await Order.aggregate([
             {
                 $match: { user: userId }
             },
             {
                 $lookup: {
-                    from: "payments", // Assuming the name of the payments collection
+                    from: "payments",
                     localField: "payment",
                     foreignField: "_id",
                     as: "paymentDetails"
@@ -331,7 +344,7 @@ const getUserOrderDetails = async (req, res) => {
             },
             {
                 $lookup: {
-                    from: "addresses", // Assuming the name of the addresses collection
+                    from: "addresses",
                     let: { shippingAddressId: "$shippingAddress" },
                     pipeline: [
                         {
@@ -339,15 +352,9 @@ const getUserOrderDetails = async (req, res) => {
                                 $expr: {
                                     $and: [
                                         { $eq: ["$userId", userId] },
-                                        { $in: ["$$shippingAddressId", ["$_id"]] }
+                                        { $in: ["$$shippingAddressId", "$address._id"] }
                                     ]
                                 }
-                            }
-                        },
-                        { $unwind: "$address" },
-                        {
-                            $match: {
-                                $expr: { $eq: ["$address._id", "$$shippingAddressId"] }
                             }
                         }
                     ],
@@ -355,14 +362,239 @@ const getUserOrderDetails = async (req, res) => {
                 }
             },
             {
-                $unwind: { path: "$voucher", preserveNullAndEmptyArrays: true } // Unwind the voucher array
+                $unwind: { path: "$paymentDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $unwind: { path: "$shippingAddressDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $addFields: {
+                    shippingAddressDetails: {
+                        $arrayElemAt: ["$shippingAddressDetails.address", 0]
+                    }
+                }
             },
             {
                 $lookup: {
-                    from: "vouchers", // Assuming the name of the vouchers collection
+                    from: "vouchers",
+                    let: { voucherId: "$voucher" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$userId", userId] },
+                                        { $in: ["$$voucherId", "$vouchers._id"] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "voucherDetails"
+                }
+            },
+            {
+                $unwind: { path: "$voucherDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $addFields: {
+                    voucherDetails: {
+                        $arrayElemAt: ["$voucherDetails.vouchers", 0]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    items: 1,
+                    totalAmount: 1,
+                    totalPayAmount: 1,
+                    totalBV: 1,
+                    status: 1,
+                    createdAt: 1,
+                    paymentDetails: 1,
+                    shippingAddressDetails: 1,
+                    voucherDetails: 1,
+                    billNo: 1,
+                    orderId: 1
+                }
+            }
+        ]);
+
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found for this user.' });
+        }
+
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
+const getUserOrderDetailsByOrderId = async (req, res) => {
+    try {
+        const { orderId } = req.params; // Get orderId from request params
+        const orderObjectId = new ObjectId(orderId);
+
+        // Find the order by orderId
+        const order = await Order.findById(orderObjectId).exec();
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found.' });
+        }
+
+        const userId = order.user.toString();
+        const orderDetails = await Order.aggregate([
+            {
+                $match: { _id: orderObjectId } // Match order by orderId
+            },
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "payment",
+                    foreignField: "_id",
+                    as: "paymentDetails"
+                }
+            },
+            {
+                $unwind: { path: "$paymentDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $lookup: {
+                    from: "addresses",
+                    let: { shippingAddressId: "$shippingAddress" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$userId", new ObjectId(userId)] },
+                                        { $in: ["$$shippingAddressId", "$address._id"] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "shippingAddressDetails"
+                }
+            },
+            {
+                $unwind: { path: "$shippingAddressDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $addFields: {
+                    shippingAddressDetails: {
+                        $arrayElemAt: ["$shippingAddressDetails.address", 0]
+                    }
+                }
+            },
+            
+            {
+                $lookup: {
+                    from: "vouchers",
+                    let: { voucherId: "$voucher" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$userId", new ObjectId(userId)] },
+                                        { $in: ["$$voucherId", "$vouchers._id"] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "voucherDetails"
+                }
+            },
+            {
+                $unwind: { path: "$voucherDetails", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $addFields: {
+                    voucherDetails: {
+                        $arrayElemAt: ["$voucherDetails.vouchers", 0]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    items: 1,
+                    totalAmount: 1,
+                    totalPayAmount: 1,
+                    totalBV: 1,
+                    status: 1,
+                    createdAt: 1,
+                    paymentDetails: 1,
+                    shippingAddressDetails: 1,
+                    voucherDetails: 1,
+                    billNo: 1,
+                    orderId: 1 // Include orderId in the project stage
+                }
+            }
+        ]);
+
+        if (!orderDetails.length) {
+            return res.status(404).json({ message: 'Order details not found.' });
+        }
+
+        res.status(200).json(orderDetails[0]); // Return the first (and only) order detail
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
+const getAllOrdersWithDetails = async (req, res) => {
+    try {
+        const orders = await Order.aggregate([
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "payment",
+                    foreignField: "_id",
+                    as: "paymentDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "addresses",
+                    let: { shippingAddressId: "$shippingAddress", userId: "$user" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$userId", "$$userId"] },
+                                        { $eq: ["$_id", "$$shippingAddressId"] }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $project: { _id: 0 } // Exclude _id from shippingAddressDetails
+                        }
+                    ],
+                    as: "shippingAddressDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "vouchers",
                     localField: "voucher",
                     foreignField: "_id",
                     as: "voucherDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "userDetails"
                 }
             },
             {
@@ -376,24 +608,50 @@ const getUserOrderDetails = async (req, res) => {
                     createdAt: 1,
                     paymentDetails: { $arrayElemAt: ["$paymentDetails", 0] },
                     shippingAddressDetails: { $arrayElemAt: ["$shippingAddressDetails", 0] },
-                    voucherDetails: { $arrayElemAt: ["$voucherDetails", 0] }
+                    voucherDetails: { $arrayElemAt: ["$voucherDetails", 0] },
+                    userDetails: { $arrayElemAt: ["$userDetails", 0] },
+                    billNo: 1,
+                    orderId: 1 // Include orderId in the project stage
                 }
             }
         ]);
 
-        // If no orders found, return a 404 status
         if (!orders.length) {
-            return res.status(404).json({ message: 'No orders found for this user.' });
+            return res.status(404).json({ message: 'No orders found.' });
         }
 
-        // Respond with the orders
-        res.status(200).json(orders);
+        res.status(200).json(orders); // Return the orders
     } catch (error) {
-        // Log the error and respond with a 500 status for server errors
         console.error(error);
         res.status(500).json({ message: 'Server error. Please try again later.' });
     }
 };
 
+const deleteOrderByID = async (req, res) => {
+    try {
+        const orderId = req.params.id;
 
-module.exports = { getUserOrderDetails, createOrder, getOrderDetails, gettingBillDetailsForMFVUser, gettingBillDetailsForMFVUserByDate };
+        // Perform deletion in your database
+        const deletedOrder = await Order.findByIdAndDelete(orderId);
+
+        if (!deletedOrder) {
+            return res.status(404).json({ success: false, message: 'Order not found.' });
+        }
+
+        res.status(200).json({ success: true, message: 'Order deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete order.' });
+    }
+};
+
+module.exports = {
+    getUserOrderDetailsByOrderId,
+    getUserOrderDetails,
+    createOrder,
+    getOrderDetails,
+    gettingBillDetailsForMFVUser,
+    gettingBillDetailsForMFVUserByDate,
+    getAllOrdersWithDetails,
+    deleteOrderByID
+};

@@ -1,11 +1,22 @@
+import { Fragment, useEffect } from "react";
+import { Card, CardBody, Col, Container, Row, Spinner } from "reactstrap";
+import { useAppSelector, useAppDispatch } from "@/Redux/Hooks";
+import { getDiscounts } from "@/Redux/discount";
 import CommonBreadcrumb from "@/CommonComponents/CommonBreadcrumb";
 import CommonCardHeader from "@/CommonComponents/CommonCardHeader";
 import Datatable from "@/CommonComponents/DataTable";
-import { CouponsListData } from "@/Data/Coupons";
-import { Fragment } from "react";
-import { Card, CardBody, Col, Container, Row } from "reactstrap";
 
 const ListCoupons = () => {
+  const dispatch = useAppDispatch();
+  const { discounts, isLoading, error } = useAppSelector((state) => state.DiscountReducer);
+
+  useEffect(() => {
+    dispatch(getDiscounts());
+  }, [dispatch]);
+
+  // Specify fields to show in the datatable, excluding fields like '__v'
+  const fieldsToShow = ['startingPrice', 'endingPrice', 'discountPercentage'];
+
   return (
     <Fragment>
       <CommonBreadcrumb title="List Coupons" parent="Coupons" />
@@ -13,10 +24,23 @@ const ListCoupons = () => {
         <Row>
           <Col sm="12">
             <Card>
-              <CommonCardHeader title="Product Category" />
+              <CommonCardHeader title="Discount Category" />
               <CardBody>
                 <div id="batchDelete" className="category-table order-table coupon-list-delete">
-                  <Datatable multiSelectOption={true} myData={CouponsListData} pageSize={10} pagination={true} class="-striped -highlight" />
+                  {isLoading ? (
+                    <Spinner size="sm" />
+                  ) : error ? (
+                    <p className="text-danger">{error}</p>
+                  ) : (
+                    <Datatable
+                      multiSelectOption={false}
+                      myData={discounts}
+                      pageSize={10}
+                      pagination={true}
+                      className="-striped -highlight"
+                      fieldsToShow={fieldsToShow}
+                    />
+                  )}
                 </div>
               </CardBody>
             </Card>

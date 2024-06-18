@@ -7,8 +7,8 @@ const UserPanel = () => {
         <div>
           <img className="img-60 rounded-circle lazyloaded blur-up" src={`${ImagePath}/dashboard/man.png`} alt="#" />
         </div>
-        <h6 className="mt-3 f-14">JOHN</h6>
-        <p>general manager.</p>
+        <h6 className="mt-3 f-14">Admin</h6>
+        <p>general manager</p>
       </div>
     </div>
   );

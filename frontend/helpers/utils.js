@@ -1,9 +1,10 @@
 // Function to convert INR price to the selected currency and round it up to the nearest whole number
 export const convertPrice = (price, selectedCurr) => {
   let convertedPrice = price / selectedCurr?.value;
-  convertedPrice = Math.ceil(convertedPrice);
+  convertedPrice = parseFloat(convertedPrice.toFixed(2));
   return convertedPrice;
 };
+
 
 
 // function for truncate the title
@@ -60,8 +61,8 @@ export function calculateBusinessVolume(priceStr) {
       throw new Error("Invalid price. Please provide a valid number as a string.");
   }
 
-  // Calculate the 15% business volume
-  const businessVolume = price * 0.15;
+  // Calculate the 20% business volume
+  const businessVolume = price * 0.20;
   return businessVolume;
 }
 
@@ -71,6 +72,15 @@ export function generate15DigitNumber() {
     randomNumber += Math.floor(Math.random() * 10);
   }
   return randomNumber;
+}
+
+export function formatDate(dateString) {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 

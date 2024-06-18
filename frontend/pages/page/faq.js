@@ -12,34 +12,54 @@ import {
 
 const faqData = [
   {
-    qus: "How can I downgrade to an earlier version of Dummy Content?",
+    qus: "What is Shop Atrno?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "Shop Atrno is an online e-commerce platform where you can discover a wide range of products ranging from fashion and accessories to electronics and home essentials.",
   },
   {
-    qus: "How can I upgrade from Shopify 2.5 to shopify 3?",
+    qus: "How can I place an order on Shop Atrno?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "To place an order on Shop Atrno, simply browse our website, select the items you wish to purchase, add them to your cart, and proceed to checkout. Follow the prompts to enter your shipping details and payment information to complete your order.",
   },
   {
-    qus: "Under what license are Regular Labs extensions released?",
+    qus: "Is it safe to shop on Shop Atrno?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "Yes, shopping on Shop Atrno is safe and secure. We use industry-standard encryption technology to protect your personal information and ensure a secure checkout process",
   },
   {
-    qus: "What is the Regular Labs Library?",
+    qus: "How can I track my order on Shop Atrno?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "Once your order has been shipped, you will receive a confirmation email with a tracking number. You can use this tracking number to monitor the status of your delivery through our website or the courier's tracking service.",
   },
   {
-    qus: "Can I turn on/off some blocks on the page?",
+    qus: "What is Shop Atrno's exchange policy?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "We have a hassle-free exchange policy. If you are not satisfied with your purchase, you can exchange the item(s) within 5 days of receipt for another item of equal or lesser value. Please ensure the item is in its original condition with tags attached. For more details, please refer to our Returns & Exchanges page.",
   },
   {
-    qus: "What is included in the theme package?",
+    qus: "Does Shop Atrno ship internationally?",
     ans:
-      "it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years,All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures",
+      "Yes, we offer international shipping to many countries worldwide. Shipping rates and delivery times may vary depending on your location. You can check if we ship to your country during the checkout process.",
+  },
+  {
+    qus: "How can I contact customer support at Shop Atrno?",
+    ans:
+      "For any inquiries or assistance, you can reach our customer support team via email at support@shopatrno.com, or through our Contact Us page on the website. We are here to help you with any questions or concerns you may have.",
+  },
+  {
+    qus: "Are there any discounts or promotions available on Shop Atrno?",
+    ans:
+      "We regularly offer discounts, promotions, and seasonal sales on Shop Atrno. Be sure to subscribe to our newsletter and follow us on social media to stay updated on the latest offers and deals.",
+  },
+  {
+    qus: "How can I stay updated with new arrivals and trends on Shop Atrno?",
+    ans:
+      "To stay informed about new arrivals, trends, and exclusive offers, you can subscribe to our newsletter. You can also follow us on social media platforms like Instagram and Facebook for daily updates and style inspiration.",
+  },
+  {
+    qus: "How does Shop Atrno handle customer privacy and data security?",
+    ans:
+      "Protecting your privacy and securing your personal information is our top priority. We adhere to strict data protection regulations and use advanced encryption technology to safeguard your data. For more details, please refer to our Privacy Policy.",
   },
 ];
 
@@ -80,7 +100,7 @@ const FaqList = ({ faq }) => {
 const FaqPage = () => {
   return (
     <>
-      
+      <CommonLayout parent="home" title="FAQ">
         <section className="faq-section section-b-space">
           <Container>
             <Row>
@@ -97,7 +117,7 @@ const FaqPage = () => {
             </Row>
           </Container>
         </section>
-      
+      </CommonLayout>
     </>
   );
 };

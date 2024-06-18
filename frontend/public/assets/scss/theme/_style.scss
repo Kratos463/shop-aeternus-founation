@@ -9620,7 +9620,6 @@ footer {
 // about page section //
 .about-head {
   margin-bottom: 20px;
-  align-items: center;
   display: flex;
   height: 100%;
 
@@ -9631,9 +9630,6 @@ footer {
 }
 
 .about-page {
-  p {
-    margin-bottom: -7px;
-  }
 
   .banner-section {
     border-radius: 5px;
@@ -9652,117 +9648,74 @@ footer {
     line-height: 2;
     letter-spacing: 0.03em;
   }
-}
 
-.testimonial {
-  background-color: $grey-about;
+  ul {
+    li {
+      color: #777777;
+      line-height: 2;
+      letter-spacing: 0.03em;
 
-  .testimonial-slider {
-    .media {
-      img {
-        border-radius: 100%;
-        border: 1px solid $round-border;
-        padding: 5px;
-        height: 130px;
-        width: 130px;
-      }
 
-      h5 {
-        font-weight: 700;
-        color: var(--theme-deafult);
-        margin-bottom: 0;
-        margin-top: 7px;
-      }
-
-      h6 {
-        margin-bottom: -4px;
-      }
-
-      .media-body {
-        padding: 30px 75px 30px 30px;
-
-        p {
-          line-height: 2;
-          letter-spacing: 0.03em;
-        }
+      strong {
+        color: black;
+        text-transform: capitalize;
       }
     }
+  }
 
-    .slick-track {
-      .slick-slide {
-        &:nth-child(even) {
-          .media {
-            border-left: 1px solid #dddddd;
-            padding-left: 50px;
-
-            .media {
-              padding-left: 5px;
-            }
-          }
-        }
-      }
-    }
+  h3 {
+    color: var(--theme-deafult);
+    font-size: 18px;
+    text-transform: capitalize;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    text-align: center;
+    margin-top: 20px;
   }
 }
 
-.team {
-  position: relative;
+// privacy page //
+.privacy-page {
 
-  img {
-    margin: 0 auto;
-  }
-
-  .slick-prev,
-  .slick-next {
-    position: absolute;
-    top: -45px;
-
-    &:before {
-      font: normal normal normal 30px/1 $font-awesome;
-      color: $dark-font;
-      opacity: 0.6;
-    }
-  }
-
-  .slick-prev {
-    left: unset;
-    right: 20px;
-
-    &:before {
-      content: "\f104";
-    }
-  }
-
-  .slick-next {
-    right: 0;
-
-    &:before {
-      content: "\f105";
-    }
-  }
-
-  h2 {
-    color: $dark-font;
-    padding-bottom: 15px;
-    border-bottom: 1px solid $border;
+  h3 {
+    color: black;
     margin-bottom: 10px;
   }
 
-  h4,
-  h6 {
-    text-align: center;
+  .desc {
+    line-height: 2;
+    letter-spacing: 0.05em;
   }
 
-  h4 {
-    color: var(--theme-deafult);
+  .bold-text {
     font-weight: 700;
-    margin-top: 15px;
-    margin-bottom: 5px;
+    font-size: 15px;
   }
 
-  h6 {
-    margin-bottom: 0;
+  h5 {
+    color: black;
+    font-weight: 700;
   }
+
+  .ques-box {
+    padding: 10px;
+
+    ul {
+      list-style-type: disc;
+      line-height: 2;
+      letter-spacing: 0.05em;
+      color: gray
+    }
+  }
+
+  .ques {
+    font-weight: 700;
+    font-size: 15px;
+    color: black
+  }
+
+  .privacy-box {}
 }
 
 // category page //

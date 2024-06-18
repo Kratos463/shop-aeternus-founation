@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from 'axios'
+import axios from 'axios';
+import { getConfig } from "../../utils";
 
 interface LoginRequest {
   identifier: string;
@@ -30,7 +31,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   isLoading: false,
-  error: null,
+  error: null,   
   token: null,
   user: null,
 };
@@ -40,8 +41,9 @@ export const login = createAsyncThunk<LoginResponse, LoginRequest>(
   async (credentials, thunkAPI) => {
     try {
       const response = await axios.post<LoginResponse>(
-        "http://localhost:9000/api/login",
-        credentials
+        `${process.env.API_URL}/api/v1/admin/login-admin`,
+        credentials,
+        getConfig()
       );
       return response.data;
     } catch (error) {
@@ -55,8 +57,9 @@ export const register = createAsyncThunk<RegisterResponse, RegisterRequest>(
   async (userData, thunkAPI) => {
     try {
       const response = await axios.post<RegisterResponse>(
-        "http://localhost:9000/api/register",
-        userData
+        `${process.env.API_URL}/api/v1/admin/register-admin`,
+        userData,
+        getConfig()
       );
       return response.data;
     } catch (error) {
@@ -75,6 +78,9 @@ const authSlice = createSlice({
       state.error = null;
       state.token = null;
       state.user = null;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     },
   },
   extraReducers: (builder) => {
@@ -83,10 +89,13 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(login.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.isLoading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user; 
+        state.user = action.payload.user;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', action.payload.token);
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -96,9 +105,8 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state, action: PayloadAction<RegisterResponse>) => {
         state.isLoading = false;
-        
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;

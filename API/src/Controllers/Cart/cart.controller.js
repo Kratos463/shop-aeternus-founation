@@ -32,7 +32,9 @@ const addProductToCart = asyncHandler(async (req, res) => {
         quantity,
         price,
         offerPrice,
-        discountPercentage
+        discountPercentage,
+        extraAmount,
+        dollerExtraAmount
     } = req.body;
 
     // Validate required fields
@@ -92,12 +94,19 @@ const addProductToCart = asyncHandler(async (req, res) => {
             quantity,
             price,
             offerPrice,
-            discountPercentage
+            discountPercentage,
+            extraAmount,
+            dollerExtraAmount,
+
         });
     }
 
     // Update total price, items quantity, and total BV
-    cart.total = cart.items.reduce((total, item) => total + item.offerPrice * item.quantity, 0).toFixed(2);
+    // Ensure dollerExtraAmount is added only once to the total
+    cart.total = cart.items.reduce((total, item) => 
+        total + item.dollerExtraAmount + item.offerPrice * item.quantity, 0
+      ).toFixed(2);
+
     cart.itemsQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
     cart.totalBV = cart.items.reduce((total, item) => total + (parseFloat(item.bv) || 0), 0).toFixed(2);
 

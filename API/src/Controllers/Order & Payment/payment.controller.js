@@ -1,5 +1,6 @@
 const Payment = require("../../Models/payment.model");
 const Wallet = require("../../Models/wallet.model");
+const User = require("../../Models/user.model");
 const WalletTransaction = require("../../Models/walletTransaction");
 
 const createPayment = async (req, res) => {
@@ -110,5 +111,20 @@ const refundPayment = async (req, res) => {
     }
 };
 
-module.exports = { createPayment, refundPayment };
+const getAllPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find()
+            .populate({
+                path: 'user',
+                select: 'username email mfvUser'
+            })
+            .exec();
+
+        res.status(200).json(payments);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching payments', error });
+    }
+};
+
+module.exports = { createPayment, refundPayment, getAllPayments };
 

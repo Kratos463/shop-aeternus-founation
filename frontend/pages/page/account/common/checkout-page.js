@@ -4,7 +4,7 @@ import CartContext from "../../../../helpers/cart";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
-import { generate15DigitNumber, getConfig } from "../../../../helpers/utils";
+import { formatDate, generate15DigitNumber, getConfig } from "../../../../helpers/utils";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../../helpers/auth/AuthContext";
 import { useVoucher } from "../../../../helpers/voucher/VoucherContext";
@@ -24,6 +24,7 @@ const CheckoutPage = () => {
     const [newAddressFormVisible, setNewAddressFormVisible] = useState(false);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
     const [discountedTotal, setDiscountedTotal] = useState(0);
+    const [orderDetails, setOrderDetails] = useState({})
 
     const {
         register,
@@ -58,14 +59,11 @@ const CheckoutPage = () => {
 
     const onSubmit = async (data) => {
         try {
-            setLoading(true);
             await addAddress(data); // Call the addAddress function with form data
-            setLoading(false);
             setObj({});
         } catch (error) {
             console.error("Error:", error);
             toast.error(error.response?.data?.error || "Error adding address");
-            setLoading(false);
         }
     };
 
@@ -75,6 +73,7 @@ const CheckoutPage = () => {
     };
 
     const handlePlaceOrder = async () => {
+        setOrderButtonLoading(true)
         try {
             // Check if address is selected
             if (!selectedAddress || !selectedAddress._id) {
@@ -95,27 +94,110 @@ const CheckoutPage = () => {
                 getConfig()
             );
 
-            if (paymentResponse.data.success) {
-                // Make the order
-                const orderResponse = await axios.post(
-                    `${process.env.API_URL}/api/v1/order/make-order`,
-                    {
-                        paymentId: paymentResponse.data.payment._id,
-                        voucherId: selectedVoucher?._id,
-                        addressId: selectedAddress._id
-                    },
-                    getConfig()
-                );
+            console.log("Payment response", paymentResponse)
 
-                if (orderResponse.data.success) {
-                    displayCartProduct();
-                    if (user.mfvUser) {
-                        getVouchers()
-                        getWalletDetails()
+            if (paymentResponse.data.payment.status === "Completed") {
+                try {
+                    // Make the order
+                    const orderResponse = await axios.post(
+                        `${process.env.API_URL}/api/v1/order/make-order`,
+                        {
+                            paymentId: paymentResponse.data.payment._id,
+                            voucherId: selectedVoucher?._id,
+                            addressId: selectedAddress._id
+                        },
+                        getConfig()
+                    );
+
+                    console.log("Order response", orderResponse);
+
+                    if (orderResponse.data.success) {
+                        const orderDetailsResponse = await axios.get(
+                            `${process.env.API_URL}/api/v1/order/get-order/${orderResponse.data._id}`,
+                            getConfig()
+                        );
+
+                        displayCartProduct();
+
+                        console.log("Order details", orderDetailsResponse);
+                        if (orderDetailsResponse.data) {
+                            setOrderDetails(orderDetailsResponse.data);
+
+                            // Extract the necessary data for the new API request
+                            const orderData = orderDetailsResponse.data;
+                            const formattedDate = formatDate(orderData.createdAt);
+                            const formattedPaymentDate = formatDate(orderData.paymentDetails.createdAt);
+                            const apiData = {
+                                customer_name: orderData.shippingAddressDetails.firstName + orderData.shippingAddressDetails.lastName,
+                                address1: orderData.shippingAddressDetails?.houseNo + orderData.shippingAddressDetails?.street + orderData.shippingAddressDetails?.landmark,
+                                address2: orderData.shippingAddressDetails?.houseNo + orderData.shippingAddressDetails?.street + orderData.shippingAddressDetails?.landmark,
+                                city: orderData.shippingAddressDetails.city,
+                                state: orderData.shippingAddressDetails.state,
+                                zip: orderData.shippingAddressDetails.postalcode,
+                                phone: orderData.shippingAddressDetails.phone,
+                                email: orderData.shippingAddressDetails.email,
+                                country: orderData.shippingAddressDetails.country,
+                                orderId: orderData.orderId,
+                                date: formattedDate,
+                                quantity: orderData.items.reduce((total, item) => total + item.quantity, 0),
+                                total: orderData.totalPayAmount * 84,
+                                paymentDate: formattedPaymentDate,
+                                status: orderData.paymentDetails.status,
+                                products: orderData.items.map(item => ({
+                                    id: item.productId,
+                                    skuId: parseInt(item.skuId),
+                                    sizeId: item.sizeId,
+                                    colorId: item.colorId,
+                                    quantity: item.quantity,
+                                    mrp: parseFloat(item.price),
+                                    offerPrice: item.offerPrice * 84,
+                                    hsnCode: parseInt(item.hsnCode),
+                                    gstPerFirst: parseFloat(item.gstPerFirst),
+                                    gstPerSecond: parseFloat(item.gstPerSecond),
+                                }))
+                            };
+
+                            // Make the API request to the new endpoint
+                            const brandTadkaResponse = await axios.post(
+                                `/api/placeorder`,
+                                { data: apiData }
+                            );
+
+                            console.log("Brand Tadka response", brandTadkaResponse.data);
+                        }
+
+                        if (brandTadkaResponse.Status === "success") {
+                            if (user.mfvUser) {
+                                getVouchers();
+                                getWalletDetails();
+                            }
+                            toast.success("Order placed successfully!");
+                            router.push('/page/order-success');
+                        }
+
+                    } else {
+                        const deleteOrder = await axios.delete(
+                            `${process.env.API_URL}/api/v1/order/${orderResponse.data._id}`,
+                            getConfig()
+                        );
+                        
+                        const refundResponse = await axios.post(
+                            `${process.env.API_URL}/api/v1/payment/refund`,
+                            {
+                                paymentId: paymentResponse.data.payment._id
+                            },
+                            getConfig()
+                        );
+
+                        if (refundResponse.data.success) {
+                            getWalletDetails();
+                            toast.error("Failed to place order. Refund initiated.");
+                        } else {
+                            toast.error("Failed to place order. Refund failed.");
+                        }
                     }
-                    toast.success("Order placed successfully!");
-                    router.push('/page/order-success');
-                } else {
+                } catch (orderError) {
+                    console.error("Order Error:", orderError);
                     // If order fails after payment, initiate refund
                     const refundResponse = await axios.post(
                         `${process.env.API_URL}/api/v1/payment/refund`,
@@ -126,7 +208,7 @@ const CheckoutPage = () => {
                     );
 
                     if (refundResponse.data.success) {
-                        getWalletDetails()
+                        getWalletDetails();
                         toast.error("Failed to place order. Refund initiated.");
                     } else {
                         toast.error("Failed to place order. Refund failed.");
@@ -137,9 +219,36 @@ const CheckoutPage = () => {
             }
         } catch (error) {
             console.error("Error:", error);
-            toast.error("Failed to place order.");
+            // Attempt refund if payment was made but order creation failed
+            if (error.response?.data?.payment?._id) {
+                try {
+                    const refundResponse = await axios.post(
+                        `${process.env.API_URL}/api/v1/payment/refund`,
+                        {
+                            paymentId: error.response.data.payment._id
+                        },
+                        getConfig()
+                    );
+
+                    if (refundResponse.data.success) {
+                        getWalletDetails();
+                        toast.error("Failed to place order. Refund initiated.");
+                    } else {
+                        toast.error("Failed to place order. Refund failed.");
+                    }
+                } catch (refundError) {
+                    console.error("Refund Error:", refundError);
+                    toast.error("Failed to place order and refund. Please contact support.");
+                }
+            } else {
+                toast.error("Failed to place order.");
+            }
+        } finally {
+            setLoading(false); // Ensure loading state is reset
         }
     };
+
+
 
 
     return (
@@ -150,7 +259,7 @@ const CheckoutPage = () => {
                         <Row>
                             <Col>
                                 <div className="balance-strip">
-                                    <p className="balance">Current Balance: {selectedCurr.symbol}{wallet?.amount}</p>
+                                    <p className="balance">Current Balance: {selectedCurr.symbol}{(wallet?.amount).toFixed(2)}</p>
                                     <Button className="refresh-btn" color="secondary" size="sm" onClick={() => getWalletDetails()}>Refresh</Button>
                                 </div>
                             </Col>
@@ -452,7 +561,7 @@ const CheckoutPage = () => {
                                                             </div>
                                                         ) : (
                                                             <button type="button" className="btn-solid btn" onClick={handlePlaceOrder}>
-                                                                Place Order
+                                                                {loading ? "Processing..." : "Place Order"}
                                                             </button>
                                                         )}
                                                     </div>

@@ -1,7 +1,6 @@
 import React from "react";
 import CommonLayout from "../../../components/shop/common-layout";
 import { Container, Row, Col, Media, Form, Label, Input } from "reactstrap";
-import FaqPage from "../faq";
 
 const Data = [
   {
@@ -128,7 +127,6 @@ const Contact = () => {
               </Form>
             </Col>
           </Row>
-          <FaqPage />
         </Container>
       </section>
     </CommonLayout>

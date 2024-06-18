@@ -29,7 +29,7 @@ export const VoucherProvider = ({ children }) => {
     };
 
     return (
-        <VoucherContext.Provider value={{ vouchers }}>
+        <VoucherContext.Provider value={{ vouchers, getVouchers }}>
             {children}
         </VoucherContext.Provider>
     );

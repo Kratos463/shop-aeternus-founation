@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Context from "./index";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
-import { getConfig } from "../utils";
+import { convertPrice, getConfig } from "../utils";
+import { CurrencyContext } from "../Currency/CurrencyContext";
 
 const CartProvider = (props) => {
   const { user } = useAuth();
+  const { state: selectedCurr } = useContext(CurrencyContext);
   const [cart, setCart] = useState({ items: [], total: 0, itemsQuantity: 0 });
   const [quantity, setQuantity] = useState(1);
   const [stock, setStock] = useState("InStock");
@@ -73,7 +75,9 @@ const CartProvider = (props) => {
         saveUpto: product.Save_upto,
         productUrl: product.Product_url,
         offerPrice: offerPrice,
-        discountPercentage: discount
+        discountPercentage: discount,
+        extraAmount: product.Extra_amount,
+        dollerExtraAmount: convertPrice(parseFloat(product.Extra_amount), selectedCurr)
       };
   
       const response = await axios.post(
@@ -83,8 +87,8 @@ const CartProvider = (props) => {
       );
   
       if (response.data.success) {
-        toast.success("Product added to cart");
         displayCartProduct();
+        toast.success("Product added to cart");
         return "Product successfully added to cart";
       } else {
         toast.error("Failed to add product to cart");

@@ -9,7 +9,7 @@ const GeneralCouponForm = () => {
       <Row>
         <Col sm="12">
           <GeneFormTop />
-          <GeneralFormBottom />
+          {/* <GeneralFormBottom /> */}
         </Col>
       </Row>
     </Form>

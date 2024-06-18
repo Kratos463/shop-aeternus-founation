@@ -73,6 +73,12 @@ const itemSchema = new mongoose.Schema({
     discountPercentage: {
         type: Number,
         required: true
+    },
+    extraAmount: {
+        type: String
+    },
+    dollerExtraAmount: {
+        type: Number
     }
 }, { _id: false });
 

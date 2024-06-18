@@ -210,25 +210,25 @@ const MasterFooter = ({
                     <div className="footer-contant">
                       <ul>
                         <li>
-                          <a href="#">About Us</a>
+                          <Link href="/page/about-us">About Us</Link>
                         </li>
                         <li>
-                          <a href="#">Contact Us</a>
+                          <Link href="/page/account/contact">Contact Us</Link>
                         </li>
                         <li>
-                          <a href="#">FAQ</a>
+                          <Link href="/page/faq">FAQ</Link>
                         </li>
                         <li>
-                          <a href="#">Privacy Policy</a>
+                          <Link href="/page/privacy">Privacy Policy</Link>
                         </li>
                         <li>
-                          <a href="#">Term & Condition</a>
+                          <Link href="/page/terms-condition">Terms & Condition</Link>
                         </li>
                         <li>
-                          <a href="#">shipping & return</a>
+                          <Link href="/page/shipping-exchange">shipping & exchange</Link>
                         </li>
                         <li>
-                          <a href="#">Cancel & Refund</a>
+                          <Link href="/page/cancel-refund">Cancel & Refund</Link>
                         </li>
 
                       </ul>

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/router";
-import {Input } from "reactstrap";
+import { Input } from "reactstrap";
 import { CurrencyContext } from "../../../helpers/Currency/CurrencyContext";
 import CartContext from "../../../helpers/cart";
 import MasterSocial from "./master_social";
@@ -9,7 +9,7 @@ import { useAuth } from "../../../helpers/auth/AuthContext";
 import WishlistContext from "../../../helpers/wishlist";
 import axios from "axios";
 
-const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) => {
+const DetailsWithPrice = ({ colors, item, stickyClass, sizes }) => {
   const [quantity, setQuantity] = useState(1);
   const [discount, setDiscount] = useState(null);
   const { user } = useAuth();
@@ -18,23 +18,22 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
   const { addToWishlist } = useContext(WishlistContext);
   const { state: selectedCurr } = useContext(CurrencyContext);
   const product = item;
-  const offerPrice = discount ? Math.floor((product.Price - (product.Price * discount / 100)) / 100) * 100 : product.Price;
-  const convertedOfferPrice = convertPrice(offerPrice, selectedCurr)
-  const productPrice = convertPrice(offerPrice, selectedCurr);
-  const businessVolume = calculateBusinessVolume(productPrice).toFixed(2)
+  const productPrice = parseFloat(product.Price);
+  const offerPrice = discount ? parseFloat((productPrice - (productPrice * discount / 100)).toFixed(2)) : productPrice.toFixed(2);
+  const convertedOfferPrice = parseFloat(convertPrice(offerPrice, selectedCurr).toFixed(2));
+  const businessVolume = calculateBusinessVolume(convertedOfferPrice).toFixed(2);
 
   useEffect(() => {
     async function fetchDiscount() {
       try {
-        const response = await axios.get(`${process.env.API_URL}/api/v1/discount/get-discount/${Math.floor(product.Price)}`, getConfig());
+        const response = await axios.get(`${process.env.API_URL}/api/v1/discount/get-discount/${Math.floor(productPrice)}`, getConfig());
         setDiscount(response.data.discount.discountPercentage);
       } catch (error) {
         console.error("Error fetching discount:", error);
       }
     }
     fetchDiscount();
-  }, [product.Price]);
-
+  }, [productPrice]);
 
   const changeQty = (e) => {
     setQuantity(parseInt(e.target.value));
@@ -55,14 +54,13 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
   const stock = parseInt(product?.Stock_qty) > 0 ? "In Stock" : "Out of Stock";
 
   const handleAddToCart = () => {
-    if (user) { 
+    if (user) {
       const businessVolumeNumber = parseFloat(businessVolume);
       addToCart(product, quantity, businessVolumeNumber, colors[0], sizes[0], convertedOfferPrice, discount);
     } else {
       router.push("/page/account/login");
     }
   };
-  
 
   const handleAddToWishlist = () => {
     if (user) {
@@ -71,24 +69,32 @@ const DetailsWithPrice = ({ colors, item, stickyClass, sizes, changeColorVar }) 
       router.push("/page/account/login");
     }
   };
+
   return (
     <>
       <div className={`product-right ${stickyClass}`}>
         <h2> {product.Title} </h2>
         <h4>
           <del>MRP {selectedCurr.symbol}
-            {convertPrice(parseInt(product.Price), selectedCurr)}.00
+            {convertPrice(productPrice, selectedCurr).toFixed(2)}
           </del>
           <span>{discount}% off</span>
         </h4>
         <h3 className="f-price">
-          Offer Price: {selectedCurr.symbol} {convertedOfferPrice}.00
+          Offer Price: {selectedCurr.symbol} {convertedOfferPrice}
         </h3>
         {user?.mfvUser && (
-         <h3 className="bv">
-         BV: <span>{selectedCurr.symbol}{parseFloat(businessVolume).toFixed(2)}</span>
-       </h3>
+          <h3 className="bv">
+            BV: <span>{selectedCurr.symbol}{businessVolume}</span>
+          </h3>
         )}
+
+        {product.Extra_amount !== "0.00" && (
+          <h4 className="extra-charge">
+            Handling Charge: {selectedCurr.symbol}{convertPrice(parseFloat(product.Extra_amount), selectedCurr).toFixed(2)}
+          </h4>
+        )}
+
 
         <div className="product-description border-product">
 

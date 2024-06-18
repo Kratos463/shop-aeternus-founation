@@ -31,10 +31,10 @@ const OrderSuccess = () => {
                 <Container>
                     <Row>
                         <Col lg="6">
-                            <div className="product-order">
+                            <div className="product-order">s
                                 <h3>your order details</h3>
 
-                                {cartItems.map((item, i) =>
+                                {/* {cartItems.map((item, i) =>
                                     <Row className="product-order-detail" key={i}>
                                         <Col xs="3" >
                                             <Media src={item.images[0].src} alt=""
@@ -59,7 +59,7 @@ const OrderSuccess = () => {
                                             </div>
                                         </Col>
                                     </Row>
-                                )}
+                                )} */}
                                 <div className="total-sec">
                                     <ul>
                                         <li>subtotal <span>{symbol}{cartTotal}</span></li>

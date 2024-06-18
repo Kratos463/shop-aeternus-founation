@@ -3,7 +3,6 @@ import Link from "next/link";
 import CartContext from "../../../../helpers/cart";
 import { Container, Row, Col, Media, Button } from "reactstrap";
 import { CurrencyContext } from "../../../../helpers/Currency/CurrencyContext";
-import { convertPrice } from "../../../../helpers/utils";
 import { useAuth } from "../../../../helpers/auth/AuthContext";
 
 
@@ -23,6 +22,10 @@ const CartPage = () => {
     }
   };
 
+  const totalDollerExtraAmount = cart.items.reduce((total, item) => total + item.dollerExtraAmount, 0).toFixed(2);
+  const subtotal = cart.items.reduce((total, item) => total + item.offerPrice, 0).toFixed(2);
+
+
   return (
     <div>
       {cart && cart?.items?.length > 0 ? (
@@ -37,6 +40,7 @@ const CartPage = () => {
                       <th scope="col">product name</th>
                       <th scope="col">price</th>
                       <th scope="col">quantity</th>
+                      <th scope="col">Handling Charge</th>
                       {
                         user?.mfvUser && (
                           <th scope="col">BV</th>
@@ -84,12 +88,21 @@ const CartPage = () => {
                                   style={{
                                     borderColor: quantityError ? "red" : "",
                                   }}
-                                  // min="1"
-                                  // max={parseInt(item.stockQty)}
+                                // min="1"
+                                // max={parseInt(item.stockQty)}
                                 />
                               </div>
                             </div>
                             {/* {item.qty >= item.stock ? "out of Stock" : ""} */}
+                          </td>
+
+                          {/* handling charge */}
+                          <td>
+                            <h2>
+                              {selectedCurr.symbol}
+                              {item.dollerExtraAmount}
+
+                            </h2>
                           </td>
 
                           {/* business volume */}
@@ -109,7 +122,7 @@ const CartPage = () => {
                           <td>
                             <h2 className="td-color">
                               {selectedCurr.symbol}
-                              {item.quantity * item.offerPrice}
+                              {item.quantity * item.offerPrice + item.dollerExtraAmount}
 
                             </h2>
                           </td>
@@ -128,13 +141,35 @@ const CartPage = () => {
                 <table className="table cart-table table-responsive-md">
                   <tfoot>
                     <tr>
+                      <td>subtotal :</td>
+                      <td>
+                        <h2>
+                          
+                            {selectedCurr.symbol}
+                            {subtotal}
+                          
+                        </h2>
+                      </td>
+                    </tr>
+                    <tr>
                       <td>Shipping fee :</td>
                       <td>
                         <h2>
                           <del>
-                          {selectedCurr.symbol} 
+                            {selectedCurr.symbol}
                             50
                           </del> <span>Free</span>
+                        </h2>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Handling fee :</td>
+                      <td>
+                        <h2>
+
+                          {selectedCurr.symbol}
+                          {totalDollerExtraAmount}
+
                         </h2>
                       </td>
                     </tr>

@@ -12,22 +12,27 @@ const verifyEmail = async (req, res) => {
         // Extract the verification token from the request parameters
         const { token } = req.query;
 
+        // Validate the verification token format and uniqueness
+        if (!token) {
+            return res.status(400).json({ error: 'Verification token is missing' });
+        }
+
         // Find the user with the corresponding verification token
         const user = await User.findOne({ emailVerificationToken: token });
 
         // If no user found with the verification token, handle accordingly
         if (!user) {
-            return res.status(404).json({ message: 'Invalid verification token' });
+            return res.status(404).json({ error: 'Invalid verification token' });
         }
 
         // If the user is already verified, handle accordingly
         if (user.emailVerified) {
-            return res.status(400).json({ message: 'Email already verified' });
+            return res.status(400).json({ error: 'Email already verified' });
         }
 
         // Set the emailVerified flag to true and remove the verification token
         user.emailVerified = true;
-        user.verificationToken = undefined;
+        user.emailVerificationToken = undefined;
 
         // Save the updated user data
         await user.save();
@@ -44,107 +49,142 @@ const verifyEmail = async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
     const { username, email, firstName, lastName, phone, password, newsletter } = req.body;
 
-    if ([firstName, phone, username, email, password].some(field => !field?.trim())) {
-        throw new ApiError(400, "All fields are required");
-    }
-
-    // Generate verification token
-    const verificationToken = await generateVerificationToken();
-
-    // Ensure that email and username have indexes
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    }).lean().exec();
-
-    if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists");
-    }
-
-    // Check if the request is coming from metafortunaverse
-    const origin = req.get('origin') || req.get('referer');
-    const isFromMetafortunaverse = origin && origin.includes('metafortunaverse.com');
-
-    const user = new User({
-        username,
-        firstName,
-        lastName,
-        phone,
-        email,
-        password, // Make sure password hashing is optimized
-        newsletter,
-        mfvUser: isFromMetafortunaverse,
-        emailVerificationToken: verificationToken
-    });
-
     try {
-        await user.save(); // Save the user
-        await sendVerificationEmail(email, verificationToken);
-
-        const createdUser = await User.findById(user._id).select("-password").lean().exec();
-        if (!createdUser) {
-            throw new ApiError(500, "Something went wrong while registering the user");
+        if (![firstName, phone, username, email, password].every(field => field && field.trim())) {
+            return res.status(400).json({ error: { message: "All fields are required" } });
         }
 
-        return res.status(201).json(new ApiResponse(200, "User Created", "User registered Successfully"));
+        const verificationToken = await generateVerificationToken();
+
+        // Check if the request is coming from metafortunaverse
+        const origin = req.get('origin') || req.get('referer');
+        const isFromMetafortunaverse = origin && origin.includes('metafortunaverse.com');
+
+        let user = await User.findOne({ $or: [{ email }, { phone }] }).exec();
+
+        if (user) {
+            if (isFromMetafortunaverse) {
+                if (!user.mfvUser) {
+                    // If request comes from metafortunaverse and user is not already registered with mfvUser true
+                    user.mfvUser = true;
+                    await user.save();
+                    return res.status(200).json(new ApiResponse(200, "User Updated", "User updated to metafortunaverse.com user"));
+                } else {
+                    // If request comes from metafortunaverse and user is already registered with mfvUser true
+                    return res.status(200).json(new ApiResponse(200, "User Already Registered", "User already registed to metafortunaverse.com user"));
+                }
+            } else {
+                // If request comes from a different domain and user already exists
+                return res.status(409).json({ error: { message: "User with email or phone already exists" } });
+            }
+        } else {
+            // Register new user
+            user = new User({
+                username,
+                firstName,
+                lastName,
+                phone,
+                email,
+                password,
+                newsletter,
+                mfvUser: isFromMetafortunaverse,
+                emailVerificationToken: verificationToken
+            });
+
+            await user.save(); // Save the user
+
+            if (isFromMetafortunaverse) {
+                return res.status(200).json(new ApiResponse(200, "User Created", "User registered Successfully"));
+            } else {
+                return res.status(200).json(new ApiResponse(200, "User Created", "User registered Successfully"));
+            }
+        }
     } catch (error) {
         console.error('Error during user registration:', error);
-        throw new ApiError(500, "Internal Server Error");
+        return res.status(500).json({ error: { message: "Internal Server Error " } });
     }
 });
+
 
 // login user api endpoint
+
 const loginUser = asyncHandler(async (req, res) => {
-    const { identifier, password } = req.body;
+    try {
+        const { identifier, password } = req.body;
 
-    if ([identifier, password].some(field => !field?.trim())) {
-        throw new ApiError(400, "Please provide all the fields information");
+        if ([identifier, password].some(field => !field?.trim())) {
+            throw new ApiError(400, "Please provide all the fields information");
+        }
+
+        // Check if user exists with email or username
+        const user = await User.findOne({
+            $or: [{ email: identifier }, { username: identifier }]
+        }).exec();
+
+        if (!user) {
+            throw new ApiError(400, "User does not exist");
+        }
+
+        if (!user.emailVerified) {
+            // Send verification email again if user is not verified
+            await sendVerificationEmail(user.email, user.emailVerificationToken);
+            return res.status(200).json({
+                message: "Email not verified",
+                success: true,
+                token: "",
+                emailVerified: user.emailVerified
+            });
+        }
+
+        const isValidPassword = await user.isPasswordCorrect(password);
+
+        if (!isValidPassword) {
+            throw new ApiError(400, "Invalid credentials");
+        }
+
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.TOKEN_SECRET,
+            { expiresIn: '7d' } // Token expiration
+        );
+
+        const serializedCookie = serialize('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+
+        res.setHeader("Set-Cookie", serializedCookie);
+
+        const loggedUser = user.toObject();
+        delete loggedUser.password;
+
+        return res.status(200).json({
+            message: "Login successful",
+            success: true,
+            token: token,
+            emailVerified: user.emailVerified
+        });
+    } catch (error) {
+        // Check if the error is an ApiError, indicating an expected error
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({
+                message: error.message,
+                success: false
+            });
+        } else {
+            // If it's an unexpected error, return a generic error message
+            console.error('Error during user login:', error);
+            return res.status(500).json({
+                message: "Internal Server Error",
+                success: false
+            });
+        }
     }
-
-    // Check if user exists with email or username
-    const user = await User.findOne({
-        $or: [{ email: identifier }, { username: identifier }]
-    }).exec();
-
-    if (!user) {
-        throw new ApiError(400, "User does not exist");
-    }
-
-    // Validate the password
-    const isValidPassword = await user.isPasswordCorrect(password);
-
-    if (!isValidPassword) {
-        throw new ApiError(400, "Invalid credentials");
-    }
-
-    // Create token data
-    const token = jwt.sign(
-        { id: user._id, email: user.email },
-        process.env.TOKEN_SECRET,
-        { expiresIn: '7d' } // Token expiration
-    );
-
-    // Serialize the cookie
-    const serializedCookie = serialize('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
-
-    // Set the cookie header
-    res.setHeader("Set-Cookie", serializedCookie);
-
-    // Exclude sensitive information from the user object
-    const loggedUser = user.toObject();
-    delete loggedUser.password;
-
-    return res.status(200).json({
-        message: "Login successful",
-        success: true,
-        token: token
-    });
 });
+
 
 // logout user api endpoint
 const logoutUser = asyncHandler(async (req, res) => {
@@ -207,6 +247,17 @@ const updateUserDetails = asyncHandler(async (req, res) => {
         new ApiResponse(200, updatedUser, "User details updated successfully")
     );
 
+})
+
+
+// get all users
+const getAllUsers = asyncHandler(async(req,res)=> {
+    try {
+        const users = await User.find().select('-password -emailVerificationToken');;
+        res.status(200).json(users);
+      } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+      }
 })
 
 
@@ -368,6 +419,8 @@ const updateAddress = asyncHandler(async (req, res) => {
 });
 
 
+
+
 module.exports = {
     registerUser,
     loginUser,
@@ -379,5 +432,6 @@ module.exports = {
     deleteAddress,
     getAddress,
     updateAddress,
-    verifyEmail
+    verifyEmail,
+    getAllUsers
 }

@@ -7,9 +7,9 @@ import Link from "next/link";
 
 const Login = () => {
 
-  const {loading, login} = useAuth()
+  const { loading, login } = useAuth()
   const [user, setUser] = useState({
-    identifier: "", password: "" 
+    identifier: "", password: ""
   })
 
 
@@ -23,14 +23,8 @@ const Login = () => {
 
 
   const loginAuth = async (e) => {
-    
     e.preventDefault()
-    try {
-     
-      await login(user.identifier, user.password);
-    } catch (error) {
-      setError('Invalid credentials');
-    }
+    await login(user.identifier, user.password);
   }
 
   return (

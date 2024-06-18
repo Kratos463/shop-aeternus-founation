@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
@@ -19,6 +20,8 @@ var corsOptions = {
   },
   credentials: true // Enable credentials (cookies, authorization headers, etc.)
 };
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware for parsing cookies
 app.use(cookieParser());

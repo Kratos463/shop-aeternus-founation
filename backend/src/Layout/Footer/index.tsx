@@ -10,7 +10,7 @@ const Footer = () => {
         <Container fluid>
           <Row>
             <Col md="6" className="footer-copyright">
-              <p className="mb-0">Copyright 2022 © Multikart All rights reserved.</p>
+              <p className="mb-0">Copyright 2024-25 © ShopAtrno All rights reserved.</p>
             </Col>
             <Col md="6">
               <p className="pull-right mb-0">
